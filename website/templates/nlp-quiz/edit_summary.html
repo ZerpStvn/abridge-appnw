@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Summary{% endblock %}
+
+{% block content %}
+<main class="container mt-5">
+    <h1 class="h3 mb-4">Edit Summary</h1>
+    <form method="POST">
+        <div class="form-group">
+            <label for="text">Original Text</label>
+            <textarea id="text" name="text" class="form-control" rows="10">{{ summary.text }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="summary">Summary</label>
+            <textarea id="summary" name="summary" class="form-control" rows="5">{{ summary.summary }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Save Changes</button>
+    </form>
+</main>
+{% endblock %}

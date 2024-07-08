@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Quiz{% endblock %}
+
+{% block content %}
+<main class="container mt-5">
+    <h1 class="h3 mb-4">Edit Quiz</h1>
+    <form method="POST" action="{{ url_for('views.edit_quiz', quiz_id=quiz.id) }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-4">
+            <label for="title">Quiz Title:</label>
+            {{ form.title(class="form-control") }}
+        </div>
+        <div class="quiz-question mb-4">
+            <label for="question_1">Question 1:</label>
+            {{ form.question_1(class="form-control mb-2") }}
+            <label>Options:</label>
+            {{ form.option_1_1(class="form-control mb-2") }}
+            {{ form.option_1_2(class="form-control mb-2") }}
+            {{ form.option_1_3(class="form-control mb-2") }}
+            {{ form.option_1_4(class="form-control mb-2") }}
+            <label for="correct_1">Correct Answer:</label>
+            {{ form.correct_1(class="form-control") }}
+        </div>
+        <div class="quiz-question mb-4">
+            <label for="question_2">Question 2:</label>
+            {{ form.question_2(class="form-control mb-2") }}
+            <label>Options:</label>
+            {{ form.option_2_1(class="form-control mb-2") }}
+            {{ form.option_2_2(class="form-control mb-2") }}
+            {{ form.option_2_3(class="form-control mb-2") }}
+            {{ form.option_2_4(class="form-control mb-2") }}
+            <label for="correct_2">Correct Answer:</label>
+            {{ form.correct_2(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Update Quiz</button>
+    </form>
+</main>
+{% endblock %}

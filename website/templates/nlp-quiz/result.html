@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Result{% endblock %}
+
+{% block content %}
+<main class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Summary</h1>
+        </div>
+        <div class="card-body">
+            <div class="mb-4" id="summary">
+                <div class="notes-container">
+                    <pre>{{ summary }}</pre>
+                </div>
+            </div>
+            <div class="text-end">
+                <a href="{{ url_for('views.home') }}" class="btn btn-secondary">Back</a>
+                <a href="{{ url_for('views.create_quiz') }}" class="btn btn-primary">Create Quiz</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    .notes-container {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+        white-space: pre-wrap;  /* Preserve white space for new lines */
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz{% endblock %}
+
+{% block content %}
+<main class="container mt-5">
+    <h1 class="h3 mt-5 mb-4">{{ quiz.title }}</h1>
+    <form method="POST">
+        {% for idx, question in enumerate(questions) %}
+        <div class="mb-4">
+            <h5>{{ question.question_text }}</h5>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="question_{{ idx }}" id="option_{{ idx }}_a" value="A">
+                <label class="form-check-label" for="option_{{ idx }}_a">
+                    {{ question.option_a }}
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="question_{{ idx }}" id="option_{{ idx }}_b" value="B">
+                <label class="form-check-label" for="option_{{ idx }}_b">
+                    {{ question.option_b }}
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="question_{{ idx }}" id="option_{{ idx }}_c" value="C">
+                <label class="form-check-label" for="option_{{ idx }}_c">
+                    {{ question.option_c }}
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="question_{{ idx }}" id="option_{{ idx }}_d" value="D">
+                <label class="form-check-label" for="option_{{ idx }}_d">
+                    {{ question.option_d }}
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Submit Quiz</button>
+    </form>
+</main>
+{% endblock %}

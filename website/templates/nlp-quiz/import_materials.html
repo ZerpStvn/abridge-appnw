@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Import Materials - Abridge{% endblock %}
+
+{% block content %}
+<main class="container mt-5">
+    <h1>Import file for Summarization</h1>
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('views.import_materials') }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            <label for="file" class="form-label">Choose a PDF or Image file</label>
+            {{ form.file(class="form-control", id="file", accept=".docx, .pdf, .jpg, .jpeg, .png", aria_label="Choose a file to upload") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+</main>
+{% endblock %}
