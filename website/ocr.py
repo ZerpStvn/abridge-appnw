@@ -1,58 +1,44 @@
-import os
-import io
-import base64
+from PIL import Image
+import pytesseract
+import cv2
 import numpy as np
-from PIL import Image, ImageEnhance
-import cv2 as cv
-import pytesseract as pt
-from PyPDF2 import PdfReader
+from transformers import pipeline
 
-async def test_ocr_engine():
-    try:
-        img_path = os.path.join(os.path.dirname(__file__), 'assets', 'ok.jpg')
-        img = cv.imread(img_path)
-        img = preprocess_image_for_ocr(img)
-        text = pt.image_to_string(img)
-        return "Working", None, text
-    except Exception as e:
-        return "NOT working", str(e), None
+summarizer = pipeline("summarization")
 
-async def multi_ocr(b64_images: list):
-    results = []
-    for b64_image in b64_images:
-        try:
-            image = base64.b64decode(b64_image["image"])
-            image = Image.open(io.BytesIO(image))
-            image = preprocess_image_for_ocr(np.array(image))
-            text = pt.image_to_string(image)
-            results.append({"name": b64_image["name"], "text": " ".join(text.split())})
-        except Exception as e:
-            results.append({"name": b64_image["name"], "error": str(e)})
-    return results
+def extract_text_from_image(image_path):
+    # Load the image
+    img = cv2.imread(image_path)
+    # Preprocess the image for OCR
+    img_preprocessed = preprocess_image_for_ocr(img)
+    # Convert the image to string
+    text = pytesseract.image_to_string(img_preprocessed)
+    return text
 
 def preprocess_image_for_ocr(img):
     # Convert to grayscale
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Apply thresholding
-    _, img = cv.threshold(img, 128, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
-    return img
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return thresh
 
-def extract_text_from_image(image_path):
-    img = Image.open(image_path)
-    img = preprocess_image_for_ocr(np.array(img))
-    text = pt.image_to_string(img)
-    return text
+def extract_text_from_file(file_path):
 
-def extract_text_from_pdf(pdf_path):
-    text = ''
-    try:
-        with open(pdf_path, 'rb') as file:
-            reader = PdfReader(file)
-            for page in reader.pages:
-                text_elements = page.extract_text()
-                if text_elements:
-                    text += ' '.join(text_elements) if isinstance(text_elements, list) else text_elements
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
-    return text
+    # Check if the file is an image
+    if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.gif')):
+        return extract_text_from_image(file_path)
+    else:
+        return "Unsupported file type. Please provide an image file."
+
+def summarize_text(text):
+    """
+    Summarizes the given text using a pre-trained model.
+    
+    Args:
+    - text: The text to summarize.
+    
+    Returns:
+    - The summarized text.
+    """
+    summary = summarizer(text, max_length=130, min_length=30, do_sample=False)
+    return summary[0]['summary_text']

@@ -16,7 +16,7 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if user:
-            if user.password_hash is None:
+            if user.password is None:
                 flash("This account needs to reset the password, please contact support.", category='error')
             elif check_password_hash(user.password, password):
                 flash("Logged in successfully!", category='success')

@@ -1,13 +1,7 @@
 import random
-from transformers import BertForQuestionAnswering, BertTokenizer
 import torch
 import fitz  # PyMuPDF
 import spacy
-
-# Load pre-trained BERT model and tokenizer
-model_name = "bert-large-uncased-whole-word-masking-finetuned-squad"
-model = BertForQuestionAnswering.from_pretrained(model_name)
-tokenizer = BertTokenizer.from_pretrained(model_name)
 
 # Load SpaCy model for sentence segmentation and named entity recognition
 nlp = spacy.load("en_core_web_sm")

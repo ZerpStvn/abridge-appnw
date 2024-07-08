@@ -6,8 +6,8 @@ from wtforms import FileField, SubmitField
 from sqlalchemy.orm.exc import NoResultFound
 from flask_wtf.file import FileAllowed
 from werkzeug.utils import secure_filename
-from .ocr import extract_text_from_image, extract_text_from_pdf
-from .nlp import preprocess_text, clean_sentence, build_similarity_matrix, rank_sentences, summarize, extract_text_from_pdf_nlp, advanced_summarize_pdf, remove_book_details
+from .ocr import extract_text_from_image, preprocess_image_for_ocr, extract_text_from_file, summarize_text
+from .nlp import preprocess_text, clean_sentence, build_similarity_matrix, rank_sentences, summarize, extract_text_from_pdf_nlp, advanced_summarize_pdf, remove_book_details, extract_text_from_docs_nlp
 import os
 import spacy
 from . import db
@@ -74,22 +74,21 @@ def import_materials():
 def handle_upload(filename):
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
 
-    if filename.lower().endswith(('.pdf', '.docx')):
+    if filename.lower().endswith(('.pdf', '.docx', '.jpg', '.jpeg', '.png')):  # Adjusted to handle both formats
         try:
             # Extract text from PDF or DOCX
             if filename.lower().endswith('.pdf'):
                 text = extract_text_from_pdf_nlp(file_path)
             elif filename.lower().endswith('.docx'):
-                text = extract_text_from_docx(file_path)
+                text = extract_text_from_docs_nlp(file_path)
+            else:
+                text = extract_text_from_image(file_path)
 
-            # Clean and summarize the extracted text
             cleaned_summary = clean_sentence(text)
             summary = summarize(text)
             
             # Additional processing or validations can be added here
-            process_custom_data(text)
-            validate_summary(summary)
-
+            
         except Exception as e:
             current_app.logger.error(f'Failed to process uploaded file: {str(e)}')
             flash(f'Failed to process uploaded file: {str(e)}', 'error')
@@ -111,13 +110,50 @@ def handle_upload(filename):
 
     return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename)
 
+@views.route('/view_summary/<int:summary_id>', methods=['GET'])
+@login_required
+def view_summary(summary_id):
+    summary = Upload.query.get_or_404(summary_id)
+    return render_template('nlp-quiz/view_summary.html', summary=summary, user=current_user)
+
+@views.route('/edit_summary/<int:summary_id>', methods=['GET', 'POST'])
+@login_required
+def edit_summary(summary_id):
+    summary = Upload.query.get_or_404(summary_id)
+    form = UploadForm()
+
+    if request.method == 'POST' and form.validate_on_submit():
+        # Update summary logic here based on form data
+        flash('Summary updated successfully!', 'success')
+        return redirect(url_for('views.dashboard'))
+
+    return render_template('nlp-quiz/edit_summary.html', form=form, summary=summary, user=current_user)
+
+@views.route('/delete-summary/<int:summary_id>', methods=['POST'])
+@login_required
+def delete_summary(summary_id):
+    summary = Upload.query.get_or_404(summary_id)
+    if summary.user_id != current_user.id:
+        flash('You do not have permission to delete this summary.', 'error')
+        return redirect(url_for('views.dashboard'))
+
+    try:
+        db.session.delete(summary)
+        db.session.commit()
+        flash('Summary deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting summary: {str(e)}', 'error')
+
+    return redirect(url_for('views.dashboard'))
+
 @views.route('/create-quiz', methods=['GET', 'POST'])
 @login_required
 def create_quiz():
     if request.method == 'POST':
         questions = []
 
-        for i in range(1, 3):  # Assuming 2 questions for simplicity; adjust as needed
+        for i in range(1, 10):
             question_text = request.form.get(f'question_{i}')
             option_a = request.form.get(f'option_{i}_1')
             option_b = request.form.get(f'option_{i}_2')
@@ -172,25 +208,6 @@ def quiz(quiz_id):
 
     return render_template('nlp-quiz/quiz.html', quiz=quiz, questions=questions, user=current_user, enumerate=enumerate)
 
-@views.route('/view_summary/<int:summary_id>', methods=['GET'])
-@login_required
-def view_summary(summary_id):
-    summary = Upload.query.get_or_404(summary_id)
-    return render_template('nlp-quiz/view_summary.html', summary=summary, user=current_user)
-
-@views.route('/edit_summary/<int:summary_id>', methods=['GET', 'POST'])
-@login_required
-def edit_summary(summary_id):
-    summary = Upload.query.get_or_404(summary_id)
-    form = UploadForm()
-
-    if request.method == 'POST' and form.validate_on_submit():
-        # Update summary logic here based on form data
-        flash('Summary updated successfully!', 'success')
-        return redirect(url_for('views.dashboard'))
-
-    return render_template('nlp-quiz/edit_summary.html', form=form, summary=summary, user=current_user)
-
 @views.route('/edit_quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
 def edit_quiz(quiz_id):
@@ -237,24 +254,6 @@ def edit_quiz(quiz_id):
             form.correct_2.data = quiz.questions[1].correct_option
 
     return render_template('nlp-quiz/edit_quiz.html', form=form, quiz=quiz, user=current_user)
-
-@views.route('/delete-summary/<int:summary_id>', methods=['POST'])
-@login_required
-def delete_summary(summary_id):
-    summary = Upload.query.get_or_404(summary_id)
-    if summary.user_id != current_user.id:
-        flash('You do not have permission to delete this summary.', 'error')
-        return redirect(url_for('views.dashboard'))
-
-    try:
-        db.session.delete(summary)
-        db.session.commit()
-        flash('Summary deleted successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error deleting summary: {str(e)}', 'error')
-
-    return redirect(url_for('views.dashboard'))
 
 @views.route('/delete_quiz/<int:quiz_id>', methods=['POST'])
 @login_required

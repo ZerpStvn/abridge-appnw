@@ -16,7 +16,6 @@
             </div>
             <div class="text-end">
                 <a href="{{ url_for('views.home') }}" class="btn btn-secondary">Back</a>
-                <a href="{{ url_for('views.create_quiz') }}" class="btn btn-primary">Create Quiz</a>
             </div>
         </div>
     </div>
@@ -30,4 +29,75 @@
         white-space: pre-wrap;  /* Preserve white space for new lines */
     }
 </style>
+
+<main class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h1 class="h3 mb-0">Create Your Quiz</h1>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('views.create_quiz') }}">
+                <input type="hidden" name="summary" value="{{ summary }}">
+                <input type="hidden" name="filename" value="{{ filename }}">
+
+                <div id="quiz-questions">
+                    <div class="quiz-question mb-4">
+                        <label for="question_1">Question 1:</label>
+                        <input type="text" name="question_1" class="form-control mb-2" required>
+                        <label>Options:</label>
+                        <input type="text" name="option_1_1" class="form-control mb-2" placeholder="Option A" required>
+                        <input type="text" name="option_1_2" class="form-control mb-2" placeholder="Option B" required>
+                        <input type="text" name="option_1_3" class="form-control mb-2" placeholder="Option C" required>
+                        <input type="text" name="option_1_4" class="form-control mb-2" placeholder="Option D" required>
+                        <label for="correct_1">Correct Answer:</label>
+                        <select name="correct_1" class="form-control" required>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-info mb-4" id="add-question-btn" onclick="addQuestion()">Add Another Question</button>
+                <button type="submit" id="submitBtn" class="btn btn-primary" disabled>Submit Quiz</button>
+            </form>
+            <div class="text-end mt-3">
+                <a href="{{ url_for('views.home') }}" class="btn btn-secondary">Back</a>
+            </div>
+        </div>
+    </div>
+</main>
+<script>
+    let questionCount = 1;
+
+    function addQuestion() {
+        questionCount++;
+        const quizQuestions = document.getElementById('quiz-questions');
+        const newQuestion = document.createElement('div');
+        newQuestion.className = 'quiz-question mb-4';
+        newQuestion.innerHTML = `
+            <label for="question_${questionCount}">Question ${questionCount}:</label>
+            <input type="text" name="question_${questionCount}" class="form-control mb-2" required>
+            <label>Options:</label>
+            <input type="text" name="option_${questionCount}_1" class="form-control mb-2" placeholder="Option A" required>
+            <input type="text" name="option_${questionCount}_2" class="form-control mb-2" placeholder="Option B" required>
+            <input type="text" name="option_${questionCount}_3" class="form-control mb-2" placeholder="Option C" required>
+            <input type="text" name="option_${questionCount}_4" class="form-control mb-2" placeholder="Option D" required>
+            <label for="correct_${questionCount}">Correct Answer:</label>
+            <select name="correct_${questionCount}" class="form-control" required>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+            </select>
+        `;
+        quizQuestions.appendChild(newQuestion);
+
+        // Enable submit button if enough questions are added
+        if (questionCount >= 2) {
+            document.getElementById('submitBtn').disabled = false;
+        }
+    }
+</script>
 {% endblock %}

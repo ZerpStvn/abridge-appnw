@@ -7,6 +7,7 @@ import fitz  # PyMuPDF
 from transformers import pipeline
 import re
 import os
+import textwrap
 from docx import Document
 
 # Load SpaCy model
@@ -22,19 +23,13 @@ def preprocess_text(text):
     return sentences
 
 def clean_sentence(sentence):
-    """Lemmatize, remove stop words, punctuation, and spaces from a sentence"""
+    """Lemmatize, remove stop words, punctuation, spaces, and non-significant words from a sentence for better summarizing."""
     doc = nlp(sentence)
-    tokens = [token.lemma_.lower().strip() for token in doc if not token.is_stop and not token.is_punct and not token.is_space]
-    
-    # Additional processing to handle numbers, dates, etc.
-    normalized_tokens = []
-    for token in tokens:
-        if token.isdigit():
-            normalized_tokens.append("number")
-        elif token in ["role", "data", "compression", "file", "storage", "manager", "system", "software", "access", "responsibility", "creating", "deleting", "modifying", "controlling", "support", "library", "program", "online", "spooling", "operation", "interactive", "computing", "collaborate", "device", "task", "policy", "implementation", "efficiently", "use", "available", "provide", "allocation", "user", "cleared", "record", "deallocation", "return", "communicate", "availability"]:
-            normalized_tokens.append(token)
-        else:
-            normalized_tokens.append(token)
+    # Keeping tokens based on more dynamic criteria: not stop words, not punctuation, not space, and are significant parts of speech
+    tokens = [token.lemma_.lower().strip() for token in doc if not token.is_stop and not token.is_punct and not token.is_space and token.pos_ in ['NOUN', 'VERB', 'ADJ', 'ADV']]
+
+    # Normalize numbers
+    normalized_tokens = ["number" if token.isdigit() else token for token in tokens]
     
     return ' '.join(normalized_tokens)
 
@@ -99,14 +94,17 @@ def extract_text_from_pdf_nlp(pdf_path):
     return text
 
 def extract_text_from_docs_nlp(docs_path):
-    """Extract text from a .docx file"""
+    """Extract text from a .docx file, excluding book details in the heading."""
     text = ""
     try:
-        doc = Document(docx_path)
+        doc = Document(docs_path)
         paragraphs = []
         for para in doc.paragraphs:
-            paragraphs.append(para.text)
-        text = "\n".join(paragraphs)
+            # Assuming remove_book_details is a function that removes book details from the text
+            cleaned_text = remove_book_details(para.text)
+            paragraphs.append(cleaned_text.strip())
+        # Join the paragraph texts with a double newline for better readability, similar to PDF extraction
+        text = "\n\n".join(paragraphs)
     except Exception as e:
         raise RuntimeError(f"Error reading .docx file: {e}")
     return text
