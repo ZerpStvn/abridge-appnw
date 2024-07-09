@@ -15,12 +15,10 @@
     </div>
     <a href="{{ url_for('views.edit_summary', summary_id=summary.id) }}" class="btn btn-warning">Edit</a>
 
-    <!-- Delete confirmation modal -->
     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
         Delete
     </button>
 
-    <!-- Modal -->
     <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
