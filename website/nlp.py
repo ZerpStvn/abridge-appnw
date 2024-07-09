@@ -11,8 +11,8 @@ import textwrap
 from docx import Document
 
 # Load SpaCy model
-nlp = spacy.load("en_core_web_sm")
-
+nlp = spacy.load("en_core_web_sm", disable=["parser", "ner", "entity_linker", "attribute_ruler", "entity_ruler"])
+nlp.add_pipe('sentencizer')
 # Initialize the summarizer with a specified model
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
@@ -23,15 +23,18 @@ def preprocess_text(text):
     return sentences
 
 def clean_sentence(sentence):
-    """Lemmatize, remove stop words, punctuation, spaces, and non-significant words from a sentence for better summarizing."""
+    """Lemmatize, remove stop words, punctuation, spaces, and non-significant words from a sentence for better summarizing, while preserving named entities and essential context."""
     doc = nlp(sentence)
-    # Keeping tokens based on more dynamic criteria: not stop words, not punctuation, not space, and are significant parts of speech
-    tokens = [token.lemma_.lower().strip() for token in doc if not token.is_stop and not token.is_punct and not token.is_space and token.pos_ in ['NOUN', 'VERB', 'ADJ', 'ADV']]
-
-    # Normalize numbers
-    normalized_tokens = ["number" if token.isdigit() else token for token in tokens]
-    
-    return ' '.join(normalized_tokens)
+    cleaned_tokens = []
+    for token in doc:
+        # Preserve named entities by skipping the cleaning for them
+        if token.ent_type_:
+            cleaned_tokens.append(token.text)
+        # Apply cleaning criteria for non-entity tokens
+        elif not token.is_stop and token.is_alpha and not token.is_space:
+            cleaned_tokens.append(token.lemma_.lower())
+    cleaned_sentence = ' '.join(cleaned_tokens)
+    return cleaned_sentence
 
 def build_similarity_matrix(sentences):
     """Build a similarity matrix using TF-IDF vectors and cosine similarity"""

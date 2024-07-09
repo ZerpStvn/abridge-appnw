@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
 from flask_login import login_user, login_required, logout_user, current_user
 import os
+from sqlalchemy.exc import IntegrityError
 
 auth = Blueprint('auth', __name__)
 
@@ -45,6 +46,8 @@ def sign_up():
         password2 = request.form.get('password2')
 
         user = User.query.filter_by(email=email).first()
+        user_by_first_name = User.query.filter_by(first_name=first_name).first()
+
         if user:
             flash('Email already exists.', category='error')
         elif len(email) < 4:
@@ -56,11 +59,15 @@ def sign_up():
         elif len(password1) < 7:
             flash('Password must be at least 7 characters.', category='error')
         else:
-            new_user = User(email=email, first_name=first_name, password=generate_password_hash(password1))
-            db.session.add(new_user)
-            db.session.commit()
-            login_user(new_user, remember=True)
-            flash("Account created!", category='success')
-            return redirect(url_for('views.home'))
+            try:
+                new_user = User(email=email, first_name=first_name, password=generate_password_hash(password1))
+                db.session.add(new_user)
+                db.session.commit()
+                login_user(new_user, remember=True)
+                flash("Account created!", category='success')
+                return redirect(url_for('views.home'))
+            except IntegrityError:
+                db.session.rollback()
+                flash('An unexpected error occurred. Please try again.', category='error')
     
     return render_template("sign_up.html", user=current_user)

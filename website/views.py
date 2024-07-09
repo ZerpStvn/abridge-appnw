@@ -6,7 +6,7 @@ from wtforms import FileField, SubmitField
 from sqlalchemy.orm.exc import NoResultFound
 from flask_wtf.file import FileAllowed
 from werkzeug.utils import secure_filename
-from .ocr import extract_text_from_image, preprocess_image_for_ocr, extract_text_from_file, summarize_text
+from .ocr import extract_text_from_image, preprocess_image_for_ocr, extract_text_from_file
 from .nlp import preprocess_text, clean_sentence, build_similarity_matrix, rank_sentences, summarize, extract_text_from_pdf_nlp, advanced_summarize_pdf, remove_book_details, extract_text_from_docs_nlp
 import os
 import spacy
@@ -74,7 +74,14 @@ def import_materials():
 def handle_upload(filename):
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
 
-    if filename.lower().endswith(('.pdf', '.docx', '.jpg', '.jpeg', '.png')):  # Adjusted to handle both formats
+    # Retrieve the existing upload record
+    existing_upload = Upload.query.filter_by(user_id=current_user.id, filename=filename).first()
+
+    if not existing_upload:
+        flash('No existing upload record found for this file', 'error')
+        return redirect(url_for('views.import_materials'))
+
+    if filename.lower().endswith(('.pdf', '.docx', '.jpg', '.jpeg', '.png')):
         try:
             # Extract text from PDF or DOCX
             if filename.lower().endswith('.pdf'):
@@ -86,10 +93,13 @@ def handle_upload(filename):
 
             cleaned_summary = clean_sentence(text)
             summary = summarize(text)
-            
-            # Additional processing or validations can be added here
-            
+
+            # Update the existing record instead of creating a new one
+            existing_upload.text = text
+            existing_upload.summary = summary
+            db.session.commit()
         except Exception as e:
+            db.session.rollback()
             current_app.logger.error(f'Failed to process uploaded file: {str(e)}')
             flash(f'Failed to process uploaded file: {str(e)}', 'error')
             return redirect(url_for('views.import_materials'))
@@ -97,24 +107,14 @@ def handle_upload(filename):
         flash('Unsupported file type for text extraction', 'error')
         return redirect(url_for('views.import_materials'))
 
-    # Save upload details to database
-    try:
-        new_upload = Upload(user_id=current_user.id, filename=filename, text=text, summary=summary)
-        db.session.add(new_upload)
-        db.session.commit()
-        flash('File uploaded and processed successfully', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Failed to save upload to database: {str(e)}', 'error')
-        current_app.logger.error(f'Failed to save upload to database: {str(e)}')
-
     return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename)
 
 @views.route('/view_summary/<int:summary_id>', methods=['GET'])
 @login_required
 def view_summary(summary_id):
+    form = UploadForm()
     summary = Upload.query.get_or_404(summary_id)
-    return render_template('nlp-quiz/view_summary.html', summary=summary, user=current_user)
+    return render_template('nlp-quiz/view_summary.html', summary=summary, user=current_user, form=form)
 
 @views.route('/edit_summary/<int:summary_id>', methods=['GET', 'POST'])
 @login_required
@@ -122,12 +122,23 @@ def edit_summary(summary_id):
     summary = Upload.query.get_or_404(summary_id)
     form = UploadForm()
 
-    if request.method == 'POST' and form.validate_on_submit():
-        # Update summary logic here based on form data
-        flash('Summary updated successfully!', 'success')
-        return redirect(url_for('views.dashboard'))
-
-    return render_template('nlp-quiz/edit_summary.html', form=form, summary=summary, user=current_user)
+    if request.method == 'POST':
+        # Extract edited text from form
+        summary.text = request.form['text']
+        summary.summary = request.form['summary']
+        
+        try:
+            db.session.commit()
+            flash('Summary updated successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error updating summary: {e}')
+            flash('An error occurred. Please try again.', 'error')
+            return render_template('nlp-quiz/edit_summary.html', form=form, user=current_user, summary=summary)
+        
+        return redirect(url_for('views.dashboard'))  # Adjust the redirect as needed
+    
+    return render_template('nlp-quiz/edit_summary.html', form=form, user=current_user, summary=summary)
 
 @views.route('/delete-summary/<int:summary_id>', methods=['POST'])
 @login_required
@@ -176,7 +187,7 @@ def create_quiz():
             questions.append(question)
 
         try:
-            new_quiz = Quiz(title="My Quiz", user_id=current_user.id, questions=questions)  # Adjust title as needed
+            new_quiz = Quiz(title="Quiz", user_id=current_user.id, questions=questions)  # Adjust title as needed
             db.session.add(new_quiz)
             db.session.commit()
             flash('Quiz created and saved successfully!', 'success')
@@ -185,7 +196,7 @@ def create_quiz():
             db.session.rollback()
             flash(f'Failed to create quiz: {str(e)}', 'error')
 
-    return render_template('nlp-quiz/create_quiz.html', user=current_user)
+    return render_template('nlp-quiz/result.html', user=current_user)
 
 @views.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
