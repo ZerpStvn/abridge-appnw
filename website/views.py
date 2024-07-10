@@ -15,6 +15,7 @@ from .quiz import extract_text_from_pdf_quiz, generate_quiz_from_summary, prepro
 from .models import User, Quiz, Question, Upload
 from .forms import CreateQuizForm
 import logging
+from .summarization import extract_text, clean_text, extract_definitions, format_output
 
 views = Blueprint('views', __name__)
 
@@ -72,7 +73,7 @@ def import_materials():
 @views.route('/upload/<filename>', methods=['GET', 'POST'])
 @login_required
 def handle_upload(filename):
-    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], secure_filename(filename))
 
     # Retrieve the existing upload record
     existing_upload = Upload.query.filter_by(user_id=current_user.id, filename=filename).first()
@@ -81,22 +82,26 @@ def handle_upload(filename):
         flash('No existing upload record found for this file', 'error')
         return redirect(url_for('views.import_materials'))
 
-    if filename.lower().endswith(('.pdf', '.docx', '.jpg', '.jpeg', '.png')):
+    if filename.lower().endswith(('.pdf', '.docx', '.txt', 'jpeg', 'jpg', 'png')):
         try:
-            # Extract text from PDF or DOCX
             if filename.lower().endswith('.pdf'):
                 text = extract_text_from_pdf_nlp(file_path)
             elif filename.lower().endswith('.docx'):
                 text = extract_text_from_docs_nlp(file_path)
             else:
                 text = extract_text_from_image(file_path)
-
-            cleaned_summary = clean_sentence(text)
             summary = summarize(text)
+            cleaned_summary = clean_sentence(text)
+            
+            # Extract and display definitions
+            text = extract_text(file_path)
+            cleaned_text = clean_text(text)
+            definitions = extract_definitions(cleaned_text)
+            formatted_output = format_output(definitions)
 
             # Update the existing record instead of creating a new one
             existing_upload.text = text
-            existing_upload.summary = summary
+            existing_upload.summary = formatted_output
             db.session.commit()
         except Exception as e:
             db.session.rollback()
@@ -107,7 +112,7 @@ def handle_upload(filename):
         flash('Unsupported file type for text extraction', 'error')
         return redirect(url_for('views.import_materials'))
 
-    return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename)
+    return render_template('nlp-quiz/result.html', summary=formatted_output, user=current_user, filename=filename)
 
 @views.route('/view_summary/<int:summary_id>', methods=['GET'])
 @login_required
@@ -161,6 +166,7 @@ def delete_summary(summary_id):
 @views.route('/create-quiz', methods=['GET', 'POST'])
 @login_required
 def create_quiz():
+    form = UploadForm()
     if request.method == 'POST':
         questions = []
 
@@ -174,7 +180,7 @@ def create_quiz():
 
             if not all([question_text, option_a, option_b, option_c, option_d, correct_answer]):
                 flash('Form validation failed. Please ensure all fields are filled correctly.', 'error')
-                return render_template('nlp-quiz/create_quiz.html', user=current_user)
+                return render_template('nlp-quiz/result.html', user=current_user)
 
             question = Question(
                 question_text=question_text,
@@ -225,46 +231,35 @@ def edit_quiz(quiz_id):
     quiz = Quiz.query.get_or_404(quiz_id)
     form = CreateQuizForm()
 
-    if request.method == 'POST' and form.validate_on_submit():
-        # Update quiz logic here based on form data
-        quiz.title = form.title.data
-        if len(quiz.questions) > 0:
-            quiz.questions[0].question_text = form.question_1.data
-            quiz.questions[0].option_a = form.option_1_1.data
-            quiz.questions[0].option_b = form.option_1_2.data
-            quiz.questions[0].option_c = form.option_1_3.data
-            quiz.questions[0].option_d = form.option_1_4.data
-            quiz.questions[0].correct_option = form.correct_1.data
-        if len(quiz.questions) > 1:
-            quiz.questions[1].question_text = form.question_2.data
-            quiz.questions[1].option_a = form.option_2_1.data
-            quiz.questions[1].option_b = form.option_2_2.data
-            quiz.questions[1].option_c = form.option_2_3.data
-            quiz.questions[1].option_d = form.option_2_4.data
-            quiz.questions[1].correct_option = form.correct_2.data
-        db.session.commit()
-        flash('Quiz updated successfully!', 'success')
-        return redirect(url_for('views.dashboard'))
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            quiz.title = form.title.data
+            for i, question in enumerate(quiz.questions):
+                question_data = getattr(form, f'question_{i+1}', None)
+                if question_data:
+                    question.question_text = question_data.data
+                    question.option_a = getattr(form, f'option_{i+1}_1').data
+                    question.option_b = getattr(form, f'option_{i+1}_2').data
+                    question.option_c = getattr(form, f'option_{i+1}_3').data
+                    question.option_d = getattr(form, f'option_{i+1}_4').data
+                    question.correct_option = getattr(form, f'correct_{i+1}').data
+            db.session.commit()
+            flash('Quiz updated successfully!', 'success')
+            return redirect(url_for('views.dashboard'))
 
-    # Pre-fill form with existing quiz data for GET request
-    if request.method == 'GET':
+    elif request.method == 'GET':
         form.title.data = quiz.title
-        if len(quiz.questions) > 0:
-            form.question_1.data = quiz.questions[0].question_text
-            form.option_1_1.data = quiz.questions[0].option_a
-            form.option_1_2.data = quiz.questions[0].option_b
-            form.option_1_3.data = quiz.questions[0].option_c
-            form.option_1_4.data = quiz.questions[0].option_d
-            form.correct_1.data = quiz.questions[0].correct_option
-        if len(quiz.questions) > 1:
-            form.question_2.data = quiz.questions[1].question_text
-            form.option_2_1.data = quiz.questions[1].option_a
-            form.option_2_2.data = quiz.questions[1].option_b
-            form.option_2_3.data = quiz.questions[1].option_c
-            form.option_2_4.data = quiz.questions[1].option_d
-            form.correct_2.data = quiz.questions[1].correct_option
+        for i, question in enumerate(quiz.questions):
+            # Corrected from 'questions_{i+1}' to 'question_{i+1}'
+            getattr(form, f'question_{i+1}').data = question.question_text
+            getattr(form, f'option_{i+1}_1').data = question.option_a
+            getattr(form, f'option_{i+1}_2').data = question.option_b
+            getattr(form, f'option_{i+1}_3').data = question.option_c
+            getattr(form, f'option_{i+1}_4').data = question.option_d
+            getattr(form, f'correct_{i+1}').data = question.correct_option
 
-    return render_template('nlp-quiz/edit_quiz.html', form=form, quiz=quiz, user=current_user)
+    total_questions = len(quiz.questions)
+    return render_template('nlp-quiz/edit_quiz.html', user=current_user, form=form, quiz=quiz, total_questions=total_questions)
 
 @views.route('/delete_quiz/<int:quiz_id>', methods=['POST'])
 @login_required
