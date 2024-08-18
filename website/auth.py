@@ -17,9 +17,9 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if user:
-            if user.password is None:
+            if user.password_hash is None:
                 flash("This account needs to reset the password, please contact support.", category='error')
-            elif check_password_hash(user.password, password):
+            elif user.check_password(password):
                 flash("Logged in successfully!", category='success')
                 login_user(user, remember=remember)
                 return redirect(url_for('views.home'))
@@ -46,7 +46,6 @@ def sign_up():
         password2 = request.form.get('password2')
 
         user = User.query.filter_by(email=email).first()
-        user_by_first_name = User.query.filter_by(first_name=first_name).first()
 
         if user:
             flash('Email already exists.', category='error')
@@ -60,7 +59,8 @@ def sign_up():
             flash('Password must be at least 7 characters.', category='error')
         else:
             try:
-                new_user = User(email=email, first_name=first_name, password=generate_password_hash(password1))
+                new_user = User(email=email, first_name=first_name)
+                new_user.set_password(password1)  # Use the set_password method
                 db.session.add(new_user)
                 db.session.commit()
                 login_user(new_user, remember=True)

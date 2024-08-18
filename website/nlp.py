@@ -141,8 +141,6 @@ def remove_book_details(page_text):
     cleaned_lines = []
 
     for line in lines:
-        if re.match(r'^Understanding\s+Operating\s+Systems\s*,\s*Fifth\s+Edition', line, re.IGNORECASE):
-            continue  # Skip the header line
         if re.match(r'^\d+$', line.strip()):  # Skip page numbers
             continue
         cleaned_lines.append(line)

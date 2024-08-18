@@ -3,9 +3,11 @@ import pytesseract
 import cv2
 import numpy as np
 import os
-from .nlp import clean_sentence, summarize
+from openai import OpenAI
 
-# Assume clean_sentence function is defined here or imported
+client = OpenAI(api_key='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')
+
+# Set your OpenAI API key
 
 def extract_text_from_image(image_path):
     # Load the image
@@ -23,13 +25,25 @@ def preprocess_image_for_ocr(img):
     _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return thresh
 
+def summarize_text_with_openai(text):
+    # Call the OpenAI API to summarize the text
+    response = client.completions.create(engine="gpt-4",  # or use any other GPT-3 model
+    prompt=f"Summarize the following text:\n\n{text}",
+    max_tokens=150,  # Adjust the token count based on your needs
+    n=1,
+    stop=None,
+    temperature=0.5)
+    summary = response.choices[0].text.strip()
+    return summary
+
 def extract_text_from_file(file_path):
     # Check if the file is an image
     if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.gif')):
         extracted_text = extract_text_from_image(file_path)
         # Clean the extracted text
         cleaned_text = clean_sentence(extracted_text)
-        summarized_text = summarize(cleaned_text)
-        return summarized_text  # Change to summarized_text if summarization is applied
+        # Summarize the cleaned text using OpenAI
+        summarized_text = summarize_text_with_openai(cleaned_text)
+        return summarized_text
     else:
         return "Unsupported file type. Please provide an image file."

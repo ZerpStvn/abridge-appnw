@@ -1,7 +1,12 @@
 import re
 from docx import Document
 import fitz
+from openai import OpenAI
 
+client = OpenAI(api_key='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')
+import os
+
+# Initialize OpenAI client
 
 def extract_text(filename):
     """
@@ -57,7 +62,6 @@ def extract_definitions(text):
             definitions[current_term] += stripped_line + " "
     for term in definitions:
         definitions[term] = definitions[term].strip()
-        definitions[term] = re.sub(r'Understanding Operating Systems, Fifth Edition \d+', '', definitions[term])
         definitions[term] = re.sub(r'•\s*', '\n  • ', definitions[term])
         definitions[term] = re.sub(r'\n\s*\n', '\n', definitions[term]).strip()
         sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', definitions[term])
@@ -73,3 +77,24 @@ def format_output(definitions):
     for term, definition in definitions.items():
         formatted_output += f"{term}:\n{definition}\n\n"
     return formatted_output.strip()
+
+def summarize_text_with_openai(text):
+    """
+    Uses OpenAI to summarize the given text.
+    """
+    try:
+        # Create completion request
+        response = client.chat.completions.create(model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": f"Summarize the following text and format it as study notes:\n\n{text}"}
+        ],
+        max_tokens=500,
+        temperature=0.5)
+
+        # Extract summary from response
+        summary = response.choices[0].message.content.strip()
+        return summary
+
+    except Exception as e:
+        return f"An error occurred while summarizing with OpenAI: {e}"

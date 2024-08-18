@@ -11,7 +11,7 @@
     </div>
     <div class="form-group">
         <label for="summary">Summary</label>
-        <textarea id="summary" class="form-control" rows="5" readonly>{{ summary.summary }}</textarea>
+        <textarea id="summary" class="form-control" rows="20" readonly>{{ summary.summary }}</textarea>
     </div>
     <a href="{{ url_for('views.edit_summary', summary_id=summary.id) }}" class="btn btn-warning">Edit</a>
 
