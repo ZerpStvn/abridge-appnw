@@ -25,12 +25,14 @@ class Quiz(db.Model):
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question_text = db.Column(db.Text, nullable=False)
-    option_a = db.Column(db.String(255), nullable=False)
-    option_b = db.Column(db.String(255), nullable=False)
-    option_c = db.Column(db.String(255), nullable=False)
-    option_d = db.Column(db.String(255), nullable=False)
-    correct_answer = db.Column(db.String(255), nullable=False)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    choices = db.relationship('QuestionChoice', backref='question', lazy=True)
+
+class QuestionChoice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
+    choice_text = db.Column(db.String, nullable=False)
+    is_correct = db.Column(db.Boolean, default=False, nullable=False)
 
 class Upload(db.Model):
     id = db.Column(db.Integer, primary_key=True)

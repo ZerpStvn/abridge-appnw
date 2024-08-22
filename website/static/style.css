@@ -1,40 +1,145 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+html, body {
+    height: 100%;
     margin: 0;
-    padding: 0;
 }
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+body {
+    font-family: '', sans-serif;
+    background-image: url('/static/images/background.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
+
 h1 {
+    font-family: 'Halvar Breitschrift', sans-serif;
+    color: #ffffff;
+    font-weight: 814;
     text-align: center;
-    margin-bottom: 20px;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    text-transform: uppercase;
+    height: 242px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
-.question {
-    margin-bottom: 20px;
+h2 {
+    font-family: 'Halvar Breitschrift', sans-serif;
+    color: #ffffff;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
-.options {
-    margin-left: 20px;
+
+p {
+    font-family: 'Neue Montreal', sans-serif;
+    color:#ffffff
 }
-.option {
-    margin-bottom: 10px;
+
+h3{
+    font-family: 'Neue Montreal', sans-serif;
+    color: white;
 }
-button[type="submit"] {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+
+li{
+    font-family: 'Neue Montreal', sans-serif;
+    color: white;
 }
-button[type="submit"]:hover {
-    background-color: #0056b3;
+
+label {
+    font-family: 'Neue Montreal', sans-serif;
+    color: white;
 }
+
+.main-content {
+    flex: 1;
+}
+
+.footer {
+    background-color: rgba(0, 0, 0, 0);
+    color: #ffffff;
+    padding: 1rem;
+    text-align: center;
+    border-top: none; /* Remove border */
+}
+
+/* Style for the navbar */
+.navbar-custom {
+    display: flex;
+    justify-content: space-between; /* Distribute space between left and right items */
+    align-items: center; /* Center items vertically */
+    width: 100%; /* Make the navbar stretch across the screen */
+    height: 80px; /* Fixed height */
+    padding: 0 2rem; /* Optional: Add padding on the sides */
+    background-color: transparent; /* Ensure transparency if needed */
+}
+
+/* Adjust the left-aligned items (logo, About, Contact, Dashboard) */
+.navbar-nav.mr-auto {
+    display: flex;
+    align-items: center;
+}
+
+/* Adjust the right-aligned items (Login, Sign Up, Logout) */
+.navbar-nav.ml-auto {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-left: auto; /* Pushes items to the right */
+}
+
+/* Ensure links have consistent height and padding */
+.nav-item.nav-link {
+    font-family: 'Neue Montreal', sans-serif;
+    display: flex;
+    align-items: center;
+    color: white !important;
+    padding: 0 1rem; /* Adjust padding as needed */
+    height: 80px; /* Full height of the navbar */
+}
+
+/* Optional: Adjust the navbar-brand (logo) spacing */
+.navbar-brand {
+    margin-right: 1rem;
+}
+
+/* Optional: Adjust spacing between left items */
+.navbar-nav.mr-auto .nav-item {
+    margin-right: 1rem;
+}
+
+/* Optional: Style hover for links */
+.nav-item.nav-link:hover {
+    color: #d08746 !important;
+}
+
+#about {
+    width: 52px; /* Fixed width for "About" */
+}
+
+#contact {
+    width: 69px; /* Fixed width for "Contact" */
+}
+
+#dashboard {
+    width: 94px; /* Fixed width for "Dashboard" */
+}
+
+.learn-more-btn {
+    font-family: 'Neue Montreal', sans-serif; /* Font style */
+    color: #000; /* Text color, adjust as needed */
+}
+
+/* Style for the custom card */
+.card-custom {
+    width: 500px; /* Adjust the width as needed */
+    height: auto; /* Allows height to adjust based on content */
+    padding: 1rem; /* Adjust padding for internal spacing */
+    margin: 1rem auto; /* Centers the card and adds margin */
+    text-align: center; /* Center text */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow for depth */
+    background-color: #ffffff; /* Background color */
+}
+

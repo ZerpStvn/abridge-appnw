@@ -29,31 +29,53 @@ def preprocess_text(text):
     sentences = [sent.text.strip() for sent in doc.sents]
     return sentences
 
-def generate_questions_from_summary(summary, num_questions=10):
+def generate_questions_from_summary(summary, num_questions=10, num_choices=4):
     sentences = preprocess_text(summary)
     questions = []
     for sentence in sentences:
-        response = client.chat.completions.create(
+        response = client.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Generate a question and answer based on the following sentence: {sentence}"}
+                {"role": "user", "content": f"Generate a question with {num_choices} choices and indicate which one is correct based on the following sentence: {sentence}"}
             ],
-            max_tokens=200,
+            max_tokens=300,
             temperature=0.5
         )
-        generated_text = response['choices'][0]['message']['content'].strip()
-        if 'Answer:' not in generated_text:
+        generated_text = response.choices[0].message.content.strip()
+        # Process response to extract question and choices
+        lines = generated_text.split('\n')
+        if len(lines) < num_choices + 1:
             continue
-        question, answer = generated_text.split('Answer:', 1)
-        question = question.replace("Question:", "").strip()
-        answer = answer.strip()
+
+        question_text = lines[0].strip()
+        choices = [line.strip() for line in lines[1:num_choices + 1]]
+        correct_answer = lines[num_choices + 1].strip() if len(lines) > num_choices else None
+
+        if not correct_answer or not question_text:
+            continue
+
+        # Ensure choices include the correct answer
         questions.append({
-            'question': truncate_question(question, 10),
-            'answer': truncate_choice(answer, 10)
+            'question': truncate_question(question_text, 10),
+            'choices': choices,
+            'correct_answer': correct_answer
         })
+
     random.shuffle(questions)
     return questions[:num_questions]
+
+def truncate_question(question, word_limit=20):
+    words = question.split()
+    if len(words) > word_limit:
+        return ' '.join(words[:word_limit]) + '...'
+    return question
+
+def truncate_choice(choice, word_limit=20):
+    words = choice.split()
+    if len(words) > word_limit:
+        return ' '.join(words[:word_limit]) + '...'
+    return choice
 
 def truncate_text(text, word_limit):
     words = text.split()

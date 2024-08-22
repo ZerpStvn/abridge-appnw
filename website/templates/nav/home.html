@@ -1,47 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Abridge Home{% endblock %}
+{% block title %}
+    Home
+{% endblock %}
 
 {% block content %}
-<main class="container text-center">
-    <div class="jumbotron text-center mt-4">
-        <h1>Welcome to Abridge</h1>
-        <p>Your go-to platform for managing and importing materials seamlessly.</p>
-        <a href="/about" class="btn btn-primary">Learn More</a>
+    <div class="container text-center mt-5">
+        <h1> <br><br><br>YOUR GO-TO PLATFORM<br>
+            FOR MANAGING AND<br>
+            IMPORTING MATERIALS SEAMLESSLY</h1>
+        <p class="lead mt-4">
+            We offer the best solutions for managing your materials efficiently.
+        </p>
+        <a href="/about" class="btn btn-light mt-4 learn-more-btn" style="border-radius: 40px">Learn More</a>
     </div>
-
-    <div class="row text-center mt-4">
-        <div class="col-md-4">
-            <h3>Why Choose Us?</h3>
-            <p>We offer the best solutions for managing your materials efficiently.</p>
-        </div>
-        <div class="col-md-4">
-            <h3>Easy to Use</h3>
-            <p>Our platform is user-friendly and easy to navigate.</p>
-        </div>
-        <div class="col-md-4">
-            <h3>Secure</h3>
-            <p>Your data is safe with us, thanks to our top-notch security measures.</p>
-        </div>
-    </div>
-
-    <div class="mt-4">
-        <h2>How to Import Materials</h2>
-        <p>Follow these steps to import your materials:</p>
-        <ul>
-            <li>Log in to your account.</li>
-            <li>Navigate to the Import Materials section</li>
-            <li>Select the file you want to import (accepted formats: .pdf, .jpg, .jpeg, .png)</li>
-            <li>Click the "Upload" button to upload your file.</li>
-        </ul>
-    </div>
-    <div class="row justify-content-center mb-4">
-        {% if current_user.is_authenticated %}
-        <div class="col-md-4">
-            <a href="{{ url_for('views.import_materials') }}" class="btn btn-primary btn-lg btn-block" role="button" aria-label="Import materials">Import Material</a>
-        </div>
-        {% endif %}
-    </div>
-
-</main>
 {% endblock %}

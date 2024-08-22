@@ -141,7 +141,7 @@ def remove_book_details(page_text):
     cleaned_lines = []
 
     for line in lines:
-        if re.match(r'^\d+$', line.strip()):  # Skip page numbers
+        if re.match(r'^\d+$', line.strip()):
             continue
         cleaned_lines.append(line)
     

@@ -4,10 +4,11 @@
 
 {% block content %}
 <main class="container mt-5">
-    <h1 class="h3 mt-5 mb-4">Summaries</h1>
+    <!-- Summaries Section -->
+    <h2 class="h3 mt-5 mb-1">Summaries</h2>
     <div class="list-group">
         {% for summary in summaries %}
-        <div class="list-group-item">
+        <div class="list-group-item card-custom" style="text-align: center; border-radius: 20px;">
             <h5>{{ summary.filename }}</h5>
             <pre>{{ summary.content }}</pre> <!-- Assuming 'content' field contains the summary content -->
             <a href="{{ url_for('views.view_summary', summary_id=summary.id) }}" class="btn btn-primary">View</a>
@@ -18,19 +19,34 @@
         </div>
         {% endfor %}
     </div>
+    
+    <br><br>
 
-    <h1 class="h3 mb-4">Quizzes</h1>
+    <!-- Quizzes Section -->
+    <h2 class="h3 mb-1">Quizzes</h2>
     <div class="list-group">
         {% for quiz in quizzes %}
-        <div class="list-group-item">
+        <div class="list-group-item card-custom">
             <h5>{{ quiz.title }}</h5>
             <a href="{{ url_for('views.quiz', quiz_id=quiz.id) }}" class="btn btn-primary">Take Quiz</a>
-            <a href="{{ url_for('views.edit_quiz', quiz_id=quiz.id) }}" class="btn btn-warning">Edit</a>
             <form action="{{ url_for('views.delete_quiz', quiz_id=quiz.id) }}" method="POST" class="d-inline">
                 <button type="submit" class="btn btn-danger">Delete</button>
             </form>
         </div>
         {% endfor %}
     </div>
+
+    <br><br>
+
+    <div class="mt-4">
+        {% if current_user.is_authenticated %}
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-4">
+                <a href="{{ url_for('views.import_materials') }}" class="btn btn-primary btn-lg btn-block" role="button" aria-label="Import materials">Import Material</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
 </main>
 {% endblock %}

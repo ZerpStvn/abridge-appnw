@@ -4,7 +4,7 @@
 
 {% block content %}
 <main class="container mt-5">
-    <h1 class="h3 mb-4">{{ quiz.title }}</h1>
+    <h2 class="h3 mb-4">{{ quiz.title }}</h2>
     <form method="POST" action="{{ url_for('views.view_quiz', quiz_id=quiz.id) }}">
         {% for question in quiz.questions %}
         <div class="mb-4">

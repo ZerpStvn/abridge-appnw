@@ -6,7 +6,7 @@
 <main class="container mt-5">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h1 class="h3 mb-0">Summary</h1>
+            <h2 class="h3 mb-0">Summary</h2>
         </div>
         <div class="card-body">
             <div class="mb-4" id="summary">
@@ -16,8 +16,8 @@
             </div>
             <div class="text-end">
                 <a href="{{ url_for('views.home') }}" class="btn btn-secondary">Back</a>
-                <form method="POST" action="{{ url_for('views.quiz', quiz_id=quiz_id) }}" style="display:inline;">
-                    <button type="submit" name="create_quiz" value="true" class="btn btn-success">Generate Quiz</button>
+                <form method="POST" action="{{ url_for('views.generate_quiz', filename=filename) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-success">Generate Quiz</button>
                 </form>
             </div>
         </div>
@@ -31,7 +31,7 @@
         white-space: pre-wrap;
     }
     .notes-container pre {
-        white-space: pre-wrap; /* Ensure text wraps inside the pre element */
+        white-space: pre-wrap;
     }
 </style>
 {% endblock %}

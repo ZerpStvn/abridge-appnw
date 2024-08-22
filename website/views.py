@@ -11,7 +11,7 @@ import os
 import spacy
 from . import db
 from .nlp import preprocess_text, clean_sentence, build_similarity_matrix, rank_sentences, summarize, extract_text_from_pdf_nlp, advanced_summarize_pdf, remove_book_details, extract_text_from_docs_nlp
-from .quiz import extract_text_from_pdf, preprocess_text,generate_questions_from_summary, get_quiz_id, truncate_text, generate_dynamic_title, get_quiz_id
+from .quiz import extract_text_from_pdf, preprocess_text, generate_questions_from_summary, truncate_text, generate_dynamic_title, get_quiz_id, truncate_choice, truncate_question
 from .models import User, Quiz, Question, Upload
 import logging
 from .summarization import extract_text, clean_text, extract_definitions, format_output, summarize_text_with_openai
@@ -76,8 +76,6 @@ def handle_upload(filename):
     file_ext = os.path.splitext(filename)[1].lower()
 
     existing_upload = Upload.query.filter_by(user_id=current_user.id, filename=filename).first()
-    title = generate_dynamic_title(filename)
-    quiz_id = get_quiz_id(title=title)
 
     if not existing_upload:
         flash('No existing upload record found for this file', 'error')
@@ -92,18 +90,7 @@ def handle_upload(filename):
             existing_upload.summary = summary
             db.session.commit()
 
-            if request.method == 'POST' and request.form.get('create_quiz'):
-                quiz_questions = generate_questions_from_summary(summary)
-                logging.info(f"Generated quiz questions: {quiz_questions}")
-
-                for question in quiz_questions:
-                    new_question = Question(quiz_id=quiz_id, **question)
-                    db.session.add(new_question)
-                db.session.commit()
-
-                return redirect(url_for('views.quiz', quiz_id=quiz_id))
-
-            return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename, quiz_id=quiz_id)
+            return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename)
 
         except Exception as e:
             db.session.rollback()
@@ -163,6 +150,52 @@ def delete_summary(summary_id):
 
     return redirect(url_for('views.dashboard'))
 
+@views.route('/generate_quiz/<filename>', methods=['POST'])
+@login_required
+def generate_quiz(filename):
+    existing_upload = Upload.query.filter_by(user_id=current_user.id, filename=filename).first()
+
+    if not existing_upload:
+        flash('No existing upload record found for this file', 'error')
+        return redirect(url_for('views.import_materials'))
+
+    try:
+        summary = existing_upload.summary
+        questions_data = generate_questions_from_summary(summary)
+
+        # Create new quiz
+        title = generate_dynamic_title(filename)
+        new_quiz = Quiz(title=title, user_id=current_user.id)
+        db.session.add(new_quiz)
+        db.session.commit()
+
+        # Add questions to the quiz
+        for q in questions_data:
+            question = Question(
+                quiz_id=new_quiz.id,
+                question_text=q['question'],
+                correct_answer=q['correct_answer']
+            )
+            db.session.add(question)
+
+            # Add choices (you might want to create a separate model for choices if needed)
+            for choice in q['choices']:
+                db.session.add(QuestionChoice(
+                    question_id=question.id,
+                    choice_text=choice,
+                    is_correct=choice == q['correct_answer']
+                ))
+
+        db.session.commit()
+
+        flash('Quiz generated successfully!', 'success')
+        return redirect(url_for('views.quiz', quiz_id=new_quiz.id))
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Failed to generate quiz: {str(e)}')
+        flash(f'Failed to generate quiz: {str(e)}', 'error')
+        return redirect(url_for('views.import_materials'))
+
 @views.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
 @login_required
 def quiz(quiz_id):
@@ -199,42 +232,6 @@ def quiz(quiz_id):
 
     # Render the quiz template with the quiz and questions
     return render_template('nlp-quiz/quiz.html', quiz=quiz, questions=questions, user=current_user, enumerate=enumerate)
-
-@views.route('/edit_quiz/<int:quiz_id>', methods=['GET', 'POST'])
-@login_required
-def edit_quiz(quiz_id):
-    quiz = Quiz.query.get_or_404(quiz_id)
-    form = CreateQuizForm()
-
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            quiz.title = form.title.data
-            for i, question in enumerate(quiz.questions):
-                question_data = getattr(form, f'question_{i+1}', None)
-                if question_data:
-                    question.question_text = question_data.data
-                    question.option_a = getattr(form, f'option_{i+1}_1').data
-                    question.option_b = getattr(form, f'option_{i+1}_2').data
-                    question.option_c = getattr(form, f'option_{i+1}_3').data
-                    question.option_d = getattr(form, f'option_{i+1}_4').data
-                    question.correct_option = getattr(form, f'correct_{i+1}').data
-            db.session.commit()
-            flash('Quiz updated successfully!', 'success')
-            return redirect(url_for('views.dashboard'))
-
-    elif request.method == 'GET':
-        form.title.data = quiz.title
-        for i, question in enumerate(quiz.questions):
-            # Corrected from 'questions_{i+1}' to 'question_{i+1}'
-            getattr(form, f'question_{i+1}').data = question.question_text
-            getattr(form, f'option_{i+1}_1').data = question.option_a
-            getattr(form, f'option_{i+1}_2').data = question.option_b
-            getattr(form, f'option_{i+1}_3').data = question.option_c
-            getattr(form, f'option_{i+1}_4').data = question.option_d
-            getattr(form, f'correct_{i+1}').data = question.correct_option
-
-    total_questions = len(quiz.questions)
-    return render_template('nlp-quiz/edit_quiz.html', user=current_user, form=form, quiz=quiz, total_questions=total_questions)
 
 @views.route('/delete_quiz/<int:quiz_id>', methods=['POST'])
 @login_required

@@ -2,11 +2,10 @@ import re
 from docx import Document
 import fitz
 from openai import OpenAI
-
-client = OpenAI(api_key='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')
 import os
 
 # Initialize OpenAI client
+client = OpenAI(api_key='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')
 
 def extract_text(filename):
     """

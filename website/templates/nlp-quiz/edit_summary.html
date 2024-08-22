@@ -4,18 +4,24 @@
 
 {% block content %}
 <main class="container mt-5">
-    <h1 class="h3 mb-4">Edit Summary</h1>
+    <h2 class="h3 mb-4">Edit Summary</h2>
     <form method="POST">
         {{ form.hidden_tag() }}
-        <div class="form-group">
-            <label for="text">Original Text</label>
-            <textarea id="text" name="text" class="form-control" rows="10">{{ summary.text }}</textarea>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="text">Original Text</label>
+                    <textarea id="text" name="text" class="form-control" rows="20">{{ summary.text }}</textarea>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="summary">Summary</label>
+                    <textarea id="summary" name="summary" class="form-control" rows="20">{{ summary.summary }}</textarea>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="summary">Summary</label>
-            <textarea id="summary" name="summary" class="form-control" rows="5">{{ summary.summary }}</textarea>
-        </div>
-        <button type="submit" class="btn btn-success">Save Changes</button>
+        <button type="submit" class="btn btn-success mt-3">Save Changes</button>
     </form>
 </main>
 {% endblock %}
