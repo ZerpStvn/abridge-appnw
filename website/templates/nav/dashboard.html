@@ -26,7 +26,7 @@
     <h2 class="h3 mb-1">Quizzes</h2>
     <div class="list-group">
         {% for quiz in quizzes %}
-        <div class="list-group-item card-custom">
+        <div class="list-group-item card-custom" style="text-align: center; border-radius: 20px;">
             <h5>{{ quiz.title }}</h5>
             <a href="{{ url_for('views.quiz', quiz_id=quiz.id) }}" class="btn btn-primary">Take Quiz</a>
             <form action="{{ url_for('views.delete_quiz', quiz_id=quiz.id) }}" method="POST" class="d-inline">
@@ -42,7 +42,7 @@
         {% if current_user.is_authenticated %}
         <div class="row justify-content-center mt-4">
             <div class="col-md-4">
-                <a href="{{ url_for('views.import_materials') }}" class="btn btn-primary btn-lg btn-block" role="button" aria-label="Import materials">Import Material</a>
+                <a href="{{ url_for('views.import_materials') }}" class="btn btn-light btn-lg btn-block" role="button" aria-label="Import materials" style="font-family:'Neue Montreal',sans-serif;">Import Material</a>
             </div>
         </div>
         {% endif %}

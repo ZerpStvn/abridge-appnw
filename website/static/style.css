@@ -115,6 +115,18 @@ label {
     color: #d08746 !important;
 }
 
+a.navbar{
+    font-family: 'Neue Montreal', sans-serif;
+    text-decoration: none;
+    color: black;
+    border-radius: 40px;
+    padding: 10px 20px;
+}
+
+.custom-navbar:hover {
+    color: #d08746 !important;
+}
+
 #about {
     width: 52px; /* Fixed width for "About" */
 }
@@ -140,6 +152,7 @@ label {
     margin: 1rem auto; /* Centers the card and adds margin */
     text-align: center; /* Center text */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow for depth */
-    background-color: #ffffff; /* Background color */
+    background-color: rgb(36, 21, 1); /* Background color */
+    color: rgb(188, 184, 184); /* Text color */
 }
 

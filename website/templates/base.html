@@ -47,10 +47,10 @@
             </div>
             <div class="navbar-nav ml-auto d-flex align-items-center"> <!-- Right-aligned items -->
                 {% if not user.is_authenticated %}
-                <a class="nav-item nav-link" id="login" href="/login">Login</a>
-                <a class="nav-item nav-link btn-border" id="signUp" href="/sign-up">Sign Up</a>
+                <a class="navbar navbar-light custom-navbar" id="login" style="color: white; text-decoration: none; padding-left: 5px;" href="/login">Login</a>
+                <a class="navbar navbar-light bg-light" id="signUp" href="/sign-up">Sign Up</a>
                 {% else %}
-                <a class="nav-item nav-link btn-border" id="logout" href="/logout">Logout</a>
+                <a class="navbar navbar-light bg-light" id="logout" href="/logout">Logout</a>
                 {% endif %}
             </div>
             
