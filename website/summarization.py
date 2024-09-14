@@ -5,7 +5,7 @@ from openai import OpenAI
 import os
 
 # Initialize OpenAI client
-client = OpenAI(api_key='SECRET_KEY')
+client = OpenAI(api_key='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')
 
 def extract_text(filename):
     """

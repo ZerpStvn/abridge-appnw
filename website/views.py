@@ -8,10 +8,9 @@ from flask_wtf.file import FileAllowed
 from werkzeug.utils import secure_filename
 from .ocr import extract_text_from_image, preprocess_image_for_ocr, extract_text_from_file
 import os
-import spacy
 from . import db
 from .nlp import preprocess_text, clean_sentence, build_similarity_matrix, rank_sentences, summarize, extract_text_from_pdf_nlp, advanced_summarize_pdf, remove_book_details, extract_text_from_docs_nlp
-from .quiz import extract_text_from_pdf, preprocess_text, generate_questions_from_summary, truncate_text, generate_dynamic_title, get_quiz_id, truncate_choice, truncate_question
+from .quiz import generate_questions_from_summary, create_quiz
 from .models import User, Quiz, Question, Upload
 import logging
 from .summarization import extract_text, clean_text, extract_definitions, format_output, summarize_text_with_openai
@@ -44,7 +43,8 @@ def contact():
 def dashboard():
     user_summaries = Upload.query.filter_by(user_id=current_user.id).all()
     user_quizzes = Quiz.query.filter_by(user_id=current_user.id).all()
-    return render_template('nav/dashboard.html', user=current_user, uploads=user_summaries, quizzes=user_quizzes, summaries=user_summaries)
+
+    return render_template('nav/dashboard.html', user=current_user, uploads=user_summaries, summaries=user_summaries, quizzes=user_quizzes)
 
 @views.route('/import', methods=['GET', 'POST'])
 @login_required
@@ -83,14 +83,18 @@ def handle_upload(filename):
 
     if file_ext in ['.pdf', '.docx', '.jpg', '.jpeg', '.png']:
         try:
-            text = extract_text_from_pdf(file_path)
+            # Extract text based on file type
+            text = extract_text_from_pdf_nlp(file_path) if file_ext == '.pdf' else extract_text_from_docs_nlp(file_path)
+            
+            # Summarize using OpenAI
             summary = summarize_text_with_openai(text)
 
+            # Update the existing upload record
             existing_upload.text = text
             existing_upload.summary = summary
             db.session.commit()
 
-            return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename)
+            return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename, summary_id=existing_upload.id)
 
         except Exception as e:
             db.session.rollback()
@@ -100,6 +104,7 @@ def handle_upload(filename):
     else:
         flash('Unsupported file type for text extraction', 'error')
         return redirect(url_for('views.import_materials'))
+
 
 @views.route('/view_summary/<int:summary_id>', methods=['GET'])
 @login_required
@@ -132,11 +137,11 @@ def edit_summary(summary_id):
     
     return render_template('nlp-quiz/edit_summary.html', form=form, user=current_user, summary=summary)
 
-@views.route('/delete-summary/<int:summary_id>', methods=['POST'])
+@views.route('/delete_summary/<int:summary_id>', methods=['POST'])
 @login_required
 def delete_summary(summary_id):
-    summary = Upload.query.get_or_404(summary_id)
-    if summary.user_id != current_user.id:
+    summary = Upload.query.get_or_404(summary_id)  # Will raise 404 if not found
+    if summary.user_id != current_user.id:  # Check ownership
         flash('You do not have permission to delete this summary.', 'error')
         return redirect(url_for('views.dashboard'))
 
@@ -145,99 +150,82 @@ def delete_summary(summary_id):
         db.session.commit()
         flash('Summary deleted successfully!', 'success')
     except Exception as e:
-        db.session.rollback()
+        db.session.rollback()  # Rollback in case of error
         flash(f'Error deleting summary: {str(e)}', 'error')
 
     return redirect(url_for('views.dashboard'))
 
-@views.route('/generate_quiz/<filename>', methods=['POST'])
+@views.route('/generate_quiz/<int:summary_id>/<string:filename>', methods=['POST'])
 @login_required
-def generate_quiz(filename):
-    existing_upload = Upload.query.filter_by(user_id=current_user.id, filename=filename).first()
-
-    if not existing_upload:
-        flash('No existing upload record found for this file', 'error')
-        return redirect(url_for('views.import_materials'))
-
+def generate_quiz(summary_id, filename):
     try:
-        summary = existing_upload.summary
-        questions_data = generate_questions_from_summary(summary)
-
-        # Create new quiz
-        title = generate_dynamic_title(filename)
-        new_quiz = Quiz(title=title, user_id=current_user.id)
-        db.session.add(new_quiz)
-        db.session.commit()
-
-        # Add questions to the quiz
-        for q in questions_data:
-            question = Question(
-                quiz_id=new_quiz.id,
-                question_text=q['question'],
-                correct_answer=q['correct_answer']
-            )
-            db.session.add(question)
-
-            # Add choices (you might want to create a separate model for choices if needed)
-            for choice in q['choices']:
-                db.session.add(QuestionChoice(
-                    question_id=question.id,
-                    choice_text=choice,
-                    is_correct=choice == q['correct_answer']
-                ))
-
-        db.session.commit()
-
-        flash('Quiz generated successfully!', 'success')
-        return redirect(url_for('views.quiz', quiz_id=new_quiz.id))
+        # Retrieve the summary from the database
+        upload = Upload.query.get(summary_id)
+        if not upload:
+            flash("Summary not found!", "danger")
+            return redirect(url_for('views.home'))
+        
+        # Get the summary text for quiz generation
+        summary_text = upload.summary  # Assuming content is stored in the Upload model
+        
+        # Generate quiz using the summary
+        quiz = create_quiz(summary_text, summary_id)
+        
+        if quiz:
+            flash("Quiz successfully generated!", "success")
+            return redirect(url_for('views.view_quiz', quiz_id=quiz.id))
+        else:
+            flash("Failed to generate quiz.", "danger")
+            return redirect(url_for('views.dashboard'))
+    
     except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f'Failed to generate quiz: {str(e)}')
-        flash(f'Failed to generate quiz: {str(e)}', 'error')
-        return redirect(url_for('views.import_materials'))
-
-@views.route('/quiz/<int:quiz_id>', methods=['GET', 'POST'])
-@login_required
-def quiz(quiz_id):
-    # Fetch the quiz from the database
-    quiz = Quiz.query.get_or_404(quiz_id)
-    questions = Question.query.filter_by(quiz_id=quiz_id).all()
-
-    if not questions:
-        flash('No questions found for this quiz.', 'error')
+        logging.error(f"Error generating quiz: {e}")
+        flash("An error occurred while generating the quiz.", "danger")
         return redirect(url_for('views.dashboard'))
 
-    # If there are more than 10 questions, randomly select 10 questions
-    if len(questions) > 10:
-        questions = random.sample(questions, 10)
+@views.route('/view_quiz/<int:quiz_id>')
+@login_required
+def view_quiz(quiz_id):
+    quiz = Quiz.query.get(quiz_id)
+    if not quiz or quiz.user_id != current_user.id:
+        flash("Quiz not found or access denied.", "danger")
+        return redirect(url_for('views.dashboard'))
+    
+    questions = Question.query.filter_by(quiz_id=quiz_id).all()
+    
+    # Split the choices back into a list
+    for question in questions:
+        question.choices = question.choices.split(",")  # Split choices into a list
+    
+    return render_template("nlp-quiz/view_quiz.html", quiz=quiz, questions=questions, user=current_user, enumerate=enumerate)
 
-    # Handle the POST request to evaluate the quiz answers
-    if request.method == 'POST':
+@views.route('/submit_quiz/<int:quiz_id>', methods=['POST'])
+@login_required
+def submit_quiz(quiz_id):
+    try:
+        quiz = Quiz.query.filter_by(id=quiz_id, user_id=current_user.id).first_or_404()
+        user_answers = request.form.to_dict()
+        total_questions = Question.query.filter_by(quiz_id=quiz_id).count()
         correct_answers = 0
-        total_questions = len(questions)
 
-        for idx, question in enumerate(questions):
-            user_answer = request.form.get(f'question_{idx}')
+        for question in Question.query.filter_by(quiz_id=quiz_id).all():
+            user_answer = user_answers.get(f'question_{question.id}')
             if user_answer == question.correct_answer:
                 correct_answers += 1
 
-        # Calculate the score percentage, handle division by zero
-        if total_questions == 0:
-            score_percent = 0
-        else:
-            score_percent = (correct_answers / total_questions) * 100
+        score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
+        return render_template('nlp-quiz/submit_quiz.html', score=round(score, 2))
 
-        flash(f'Quiz submitted! You scored {correct_answers}/{total_questions} correct ({score_percent:.2f}%).', 'info')
+    except Exception as e:
+        current_app.logger.error(f'Failed to submit quiz: {str(e)}', exc_info=True)
+        flash('An error occurred while submitting the quiz.', 'error')
         return redirect(url_for('views.dashboard'))
-
-    # Render the quiz template with the quiz and questions
-    return render_template('nlp-quiz/quiz.html', quiz=quiz, questions=questions, user=current_user, enumerate=enumerate)
 
 @views.route('/delete_quiz/<int:quiz_id>', methods=['POST'])
 @login_required
 def delete_quiz(quiz_id):
     try:
-        quiz = Quiz.query.filter_by(id=quiz_id, user_id=current_user.id).one()
+        quiz = Quiz.query.filter_by(id=quiz_id, user_id=current_user.id).one()  # Fetch only for current user
         
         # Delete associated questions
         questions = Question.query.filter_by(quiz_id=quiz_id).all()

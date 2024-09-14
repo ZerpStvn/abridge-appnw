@@ -4,7 +4,6 @@ import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import fitz  # PyMuPDF
-from transformers import pipeline
 import re
 import os
 import textwrap
@@ -12,9 +11,6 @@ from docx import Document
 
 # Load SpaCy model
 nlp = spacy.load("en_core_web_sm", disable=["parser", "ner", "entity_linker", "attribute_ruler", "entity_ruler"])
-nlp.add_pipe('sentencizer')
-# Initialize the summarizer with a specified model
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
 def preprocess_text(text):
     """Tokenize text into sentences using SpaCy"""
@@ -103,22 +99,12 @@ def extract_text_from_docs_nlp(docs_path):
         doc = Document(docs_path)
         paragraphs = []
         for para in doc.paragraphs:
-            # Assuming remove_book_details is a function that removes book details from the text
             cleaned_text = remove_book_details(para.text)
             paragraphs.append(cleaned_text.strip())
-        # Join the paragraph texts with a double newline for better readability, similar to PDF extraction
         text = "\n\n".join(paragraphs)
     except Exception as e:
         raise RuntimeError(f"Error reading .docx file: {e}")
     return text
-
-def advanced_summarize(text):
-    """Advanced summarization using Transformer"""
-    try:
-        summary = summarizer(text, max_length=200, min_length=30, do_sample=False)
-        return summary[0]['summary_text']
-    except Exception as e:
-        raise RuntimeError(f"Error advanced summarizing text: {e}")
 
 def advanced_summarize_pdf(pdf_path):
     """

@@ -2,6 +2,8 @@ from . import db
 from flask_login import UserMixin
 from sqlalchemy.sql import func
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.types import JSON
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -15,24 +17,18 @@ class User(db.Model, UserMixin):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
 class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
+    title = db.Column(db.String(150), nullable=False)  # This stores the summary filename
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     questions = db.relationship('Question', backref='quiz', lazy=True)
 
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    question_text = db.Column(db.Text, nullable=False)
+    question_text = db.Column(db.String(255), nullable=False)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
-    choices = db.relationship('QuestionChoice', backref='question', lazy=True)
-
-class QuestionChoice(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
-    choice_text = db.Column(db.String, nullable=False)
-    is_correct = db.Column(db.Boolean, default=False, nullable=False)
+    choices = db.Column(db.String, nullable=False)  # Comma-separated string of choices
+    correct_answer = db.Column(db.String(255), nullable=False)
 
 class Upload(db.Model):
     id = db.Column(db.Integer, primary_key=True)

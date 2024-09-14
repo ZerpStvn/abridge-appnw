@@ -1,91 +1,81 @@
 import random
-import os
-import fitz  # PyMuPDF
 import spacy
 from openai import OpenAI
 from flask_login import current_user
 from datetime import datetime
-from .models import Quiz, Question  # Ensure Question model is included
+from .models import Quiz, Question, Upload
 from . import db
-from flask import render_template, request, flash, redirect, url_for, current_app
-from werkzeug.utils import secure_filename
+from flask import render_template, flash
+import time
+import re
 
-# Load SpaCy model for sentence segmentation
-nlp = spacy.load("en_core_web_sm")
+# Set up OpenAI key
+client = OpenAI(api_key='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')
 
-# Set up OpenAI API key
-client = OpenAI(api_key='SECRET_KEY')
+def generate_questions_from_summary(summary, num_questions=10):
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": f"Generate a {num_questions}-question multiple-choice quiz from the following summary. Format the response as follows: \n1. Question: [Question Text]\n2. Choices:\n   A) [Choice 1]\n   B) [Choice 2]\n   C) [Choice 3]\n   D) [Choice 4]\n3. Answer: [Correct Answer]\n\nSummary: {summary}"}
+        ]
+    )
 
-def extract_text_from_pdf(file_path):
-    doc = fitz.open(file_path)
-    text = ''
-    for page_num in range(len(doc)):
-        page = doc.load_page(page_num)
-        text += page.get_text()
-    return text
+    generated_text = response.choices[0].message.content.strip()
 
-def preprocess_text(text):
-    doc = nlp(text)
-    sentences = [sent.text.strip() for sent in doc.sents]
-    return sentences
+    # Use regex to extract all questions, choices, and answers
+    question_matches = re.findall(r"Question: (.+)", generated_text)
+    choices_matches = re.findall(r"Choices:\s+A\) (.+)\s+B\) (.+)\s+C\) (.+)\s+D\) (.+)", generated_text)
+    answer_matches = re.findall(r"Answer: ([A-D])", generated_text)
+    
+    # Ensure all components are extracted correctly
+    if not question_matches or not choices_matches or not answer_matches:
+        raise ValueError("Unable to extract questions, choices, or answers from the generated text.")
+    
+    questions_data = []
+    for i in range(len(question_matches)):
+        question_text = question_matches[i].strip()
+        choices = list(choices_matches[i])  # Each match is a tuple, convert to list
+        correct_answer = answer_matches[i].strip()
+        questions_data.append((question_text, choices, correct_answer))
+    
+    return questions_data
 
-def generate_questions_from_summary(summary, num_questions=10, num_choices=4):
-    sentences = preprocess_text(summary)
-    questions = []
-    for sentence in sentences:
-        response = client.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Generate a question with {num_choices} choices and indicate which one is correct based on the following sentence: {sentence}"}
-            ],
-            max_tokens=300,
-            temperature=0.5
-        )
-        generated_text = response.choices[0].message.content.strip()
-        # Process response to extract question and choices
-        lines = generated_text.split('\n')
-        if len(lines) < num_choices + 1:
-            continue
+def create_quiz(summary, summary_id, num_questions=10):
+    # Retrieve the summary title from the Upload table
+    upload = Upload.query.get(summary_id)
+    if not upload:
+        raise ValueError("Summary not found.")
 
-        question_text = lines[0].strip()
-        choices = [line.strip() for line in lines[1:num_choices + 1]]
-        correct_answer = lines[num_choices + 1].strip() if len(lines) > num_choices else None
+    summary_title = upload.filename  # Assuming 'filename' is the title of the summary
 
-        if not correct_answer or not question_text:
-            continue
+    # Generate multiple questions
+    questions_data = generate_questions_from_summary(summary, num_questions)
 
-        # Ensure choices include the correct answer
-        questions.append({
-            'question': truncate_question(question_text, 10),
-            'choices': choices,
-            'correct_answer': correct_answer
-        })
-
-    random.shuffle(questions)
-    return questions[:num_questions]
-
-def truncate_question(question, word_limit=20):
-    words = question.split()
-    if len(words) > word_limit:
-        return ' '.join(words[:word_limit]) + '...'
-    return question
-
-def truncate_choice(choice, word_limit=20):
-    words = choice.split()
-    if len(words) > word_limit:
-        return ' '.join(words[:word_limit]) + '...'
-    return choice
-
-def truncate_text(text, word_limit):
-    words = text.split()
-    return ' '.join(words[:word_limit])
-
-def generate_dynamic_title(filename):
-    return f"Quiz for {filename} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-
-def get_quiz_id(title):
-    new_quiz = Quiz(title=title, user_id=current_user.id)
+    # Create a new quiz with the summary title as the quiz title
+    new_quiz = Quiz(
+        title=summary_title,  # Set the quiz title to the summary title
+        user_id=current_user.id  # Assuming user_id is required
+    )
     db.session.add(new_quiz)
     db.session.commit()
-    return new_quiz.id
+
+    # Loop through the generated questions and save each to the database
+    for question_text, choices, correct_answer in questions_data:
+        # Limit choices to the first four
+        choices = choices[:4]  # Limit to 4 choices only
+
+        # Convert list of choices to a single string (comma-separated values)
+        choices_str = ",".join(choices)
+
+        new_question = Question(
+            question_text=question_text,
+            quiz_id=new_quiz.id,
+            correct_answer=correct_answer,
+            choices=choices_str
+        )
+        db.session.add(new_question)
+
+    db.session.commit()
+
+    return new_quiz

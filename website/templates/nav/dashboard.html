@@ -4,49 +4,47 @@
 
 {% block content %}
 <main class="container mt-5">
-    <!-- Summaries Section -->
-    <h2 class="h3 mt-5 mb-1">Summaries</h2>
-    <div class="list-group">
-        {% for summary in summaries %}
-        <div class="list-group-item card-custom" style="text-align: center; border-radius: 20px;">
-            <h5>{{ summary.filename }}</h5>
-            <pre>{{ summary.content }}</pre> <!-- Assuming 'content' field contains the summary content -->
-            <a href="{{ url_for('views.view_summary', summary_id=summary.id) }}" class="btn btn-primary">View</a>
-            <a href="{{ url_for('views.edit_summary', summary_id=summary.id) }}" class="btn btn-warning">Edit</a>
-            <form action="{{ url_for('views.delete_summary', summary_id=summary.id) }}" method="POST" class="d-inline">
-                <button type="submit" class="btn btn-danger">Delete</button>
-            </form>
-        </div>
-        {% endfor %}
-    </div>
-    
-    <br><br>
-
-    <!-- Quizzes Section -->
-    <h2 class="h3 mb-1">Quizzes</h2>
-    <div class="list-group">
-        {% for quiz in quizzes %}
-        <div class="list-group-item card-custom" style="text-align: center; border-radius: 20px;">
-            <h5>{{ quiz.title }}</h5>
-            <a href="{{ url_for('views.quiz', quiz_id=quiz.id) }}" class="btn btn-primary">Take Quiz</a>
-            <form action="{{ url_for('views.delete_quiz', quiz_id=quiz.id) }}" method="POST" class="d-inline">
-                <button type="submit" class="btn btn-danger">Delete</button>
-            </form>
-        </div>
-        {% endfor %}
-    </div>
-
-    <br><br>
-
-    <div class="mt-4">
-        {% if current_user.is_authenticated %}
-        <div class="row justify-content-center mt-4">
-            <div class="col-md-4">
-                <a href="{{ url_for('views.import_materials') }}" class="btn btn-light btn-lg btn-block" role="button" aria-label="Import materials" style="font-family:'Neue Montreal',sans-serif;">Import Material</a>
+    <div class="row">
+        <!-- Summaries Section -->
+        <div class="col-md-6">
+            <h2 class="h3 mt-5 mb-3">Summaries</h2>
+            <div class="list-group">
+                {% for summary in summaries %}
+                <div class="list-group-item card-custom mb-3" style="text-align: center; border-radius: 20px;">
+                    <h5>{{ summary.filename }}</h5>
+                    <pre>{{ summary.content }}</pre>
+                    <a href="{{ url_for('views.view_summary', summary_id=summary.id) }}" class="btn btn-info">View</a>
+                    <a href="{{ url_for('views.edit_summary', summary_id=summary.id) }}" class="btn btn-warning">Edit</a>
+                    <form action="{{ url_for('views.delete_summary', summary_id=summary.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+                {% endfor %}
             </div>
         </div>
-        {% endif %}
-    </div>
 
+        <!-- Quizzes Section -->
+        <div class="col-md-6">
+            <h2 class="h3 mt-5 mb-3">Quizzes</h2>
+            <div class="list-group">
+                {% for item in quizzes %}
+                <div class="list-group-item card-custom mb-3" style="text-align: center; border-radius: 20px;">
+                    <h5>{{ item.title }}</h5> <!-- The quiz title should be the summary filename -->
+                    <a href="{{ url_for('views.view_quiz', filename=item.title, summary_id=item.summary_id, quiz_id=item.id) }}" class="btn btn-primary">Take Quiz</a>
+                    <form action="{{ url_for('views.delete_quiz', quiz_id=item.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Import Material Button placed naturally within the content flow -->
+    {% if current_user.is_authenticated %}
+    <div class="mt-4 text-center">
+        <a href="{{ url_for('views.import_materials') }}" class="btn btn-light btn-lg" role="button" aria-label="Import materials" style="font-family:'Neue Montreal',sans-serif;">Import Material</a>
+    </div>
+    {% endif %}
 </main>
 {% endblock %}

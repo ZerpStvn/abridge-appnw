@@ -5,7 +5,7 @@
 {% block content %}
 <main class="container mt-5">
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <div class="card-header bg-light text-white d-flex justify-content-between align-items-center">
             <h2 class="h3 mb-0">Summary</h2>
         </div>
         <div class="card-body">
@@ -16,7 +16,7 @@
             </div>
             <div class="text-end">
                 <a href="{{ url_for('views.home') }}" class="btn btn-secondary">Back</a>
-                <form method="POST" action="{{ url_for('views.generate_quiz', filename=filename) }}" style="display:inline;">
+                <form method="POST" action="{{ url_for('views.generate_quiz', summary_id=summary_id, filename=filename) }}" style="display:inline;">
                     <button type="submit" class="btn btn-success">Generate Quiz</button>
                 </form>
             </div>
@@ -32,6 +32,9 @@
     }
     .notes-container pre {
         white-space: pre-wrap;
+    }
+    h2{
+        color: black;
     }
 </style>
 {% endblock %}
