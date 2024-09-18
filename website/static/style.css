@@ -2,15 +2,168 @@ html, body {
     height: 100%;
     margin: 0;
 }
+
 body {
-    font-family: '', sans-serif;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
     background-image: url('/static/images/background.jpg');
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    background-attachment: fixed; /* Ensure background stays in place while scrolling */
+    margin: 0;
+    padding: 0;
     height: 100vh;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Center content vertically */
+    align-items: center;     /* Center content horizontally */
+    }
+
+h1 {
+    font-family: 'Halvar Breitschrift', sans-serif;
+    color: #ffffff;
+    text-align: center;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    text-transform: uppercase;
+    height: 242px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 814;
+}
+h2 {
+    color: #ffffff;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: 'Halvar Breitschrift', sans-serif;
+}
+
+p {
+    color:#ffffff;
+    font-family: 'Neue Montreal', sans-serif;
+}
+
+h3{
+    color: white;
+    font-family: 'Neue Montreal', sans-serif;
+}
+
+h5{
+    color: white;
+    font-family: 'Neue Montreal', sans-serif;
+}
+
+li{
+    font-family: 'Neue Montreal', sans-serif;
+    color: white;
+}
+
+label {
+    color: white;
+    font-family: 'Neue Montreal', sans-serif;
+}
+
+.main-content {
+    flex: 1;
+}
+
+.footer {
+    color: #ffffff;
+    padding: 1rem;
+    text-align: center;
+    border-top: none; /* Remove border */
+    background-color: rgba(0, 0, 0, 0);
+}
+
+    /* Style for the navbar */
+.navbar-custom {
+    justify-content: space-between; /* Distribute space between left and right items */
+    align-items: center; /* Center items vertically */
+    width: 100%; /* Make the navbar stretch across the screen */
+    height: 80px; /* Fixed height */
+    padding: 0 2rem; /* Optional: Add padding on the sides */
+    background-color: transparent; /* Ensure transparency if needed */
+    display: flex;
+}
+
+    /* Adjust the left-aligned items (logo, About, Contact, Dashboard) */
+.navbar-nav.mr-auto {
+    align-items: center;
+    display: flex;
+}
+
+    /* Adjust the right-aligned items (Login, Sign Up, Logout) */
+.navbar-nav.ml-auto {
+    justify-content: flex-end;
+    align-items: center;
+    margin-left: auto; /* Pushes items to the right */
+    display: flex;
+}
+
+    /* Ensure links have consistent height and padding */
+.nav-item.nav-link {
+    display: flex;
+    align-items: center;
+    color: white !important;
+    padding: 0 1rem; /* Adjust padding as needed */
+    height: 80px; /* Full height of the navbar */
+    font-family: 'Neue Montreal', sans-serif;
+}
+
+    /* Optional: Adjust the navbar-brand (logo) spacing */
+.navbar-brand {
+    margin-right: 1rem;
+}
+
+    /* Optional: Adjust spacing between left items */
+.navbar-nav.mr-auto .nav-item {
+    margin-right: 1rem;
+}
+
+    /* Optional: Style hover for links */
+.nav-item.nav-link:hover {
+    color: #d08746 !important;
+}
+
+a.navbar{
+    text-decoration: none;
+    color: black;
+    border-radius: 40px;
+    padding: 10px 20px;
+    font-family: 'Neue Montreal', sans-serif;
+}
+
+.custom-navbar:hover {
+    color: #d08746 !important;
+}
+
+#about {
+    width: 52px; /* Fixed width for "About" */
+}
+
+#contact {
+    width: 69px; /* Fixed width for "Contact" */
+}
+    
+#dashboard {
+        width: 94px; /* Fixed width for "Dashboard" */
+    }
+    
+.learn-more-btn {
+    font-family: 'Neue Montreal', sans-serif; /* Font style */
+    color: #000; /* Text color, adjust as needed */
+}
+
+    /* Style for the custom card */
+.card-custom {
+    width: 500px; /* Adjust the width as needed */
+    height: auto; /* Allows height to adjust based on content */
+    padding: 1rem; /* Adjust padding for internal spacing */
+    margin: 1rem auto; /* Centers the card and adds margin */
+    text-align: center; /* Center text */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow for depth */
+    background-color: rgb(36, 21, 1); /* Background color */
+    color: rgb(188, 184, 184); /* Text color */
 }
 
 h1 {
@@ -145,15 +298,101 @@ a.navbar{
     color: #000; /* Text color, adjust as needed */
 }
 
-/* Style for the custom card */
 .card-custom {
-    width: 500px; /* Adjust the width as needed */
-    height: auto; /* Allows height to adjust based on content */
-    padding: 1rem; /* Adjust padding for internal spacing */
-    margin: 1rem auto; /* Centers the card and adds margin */
-    text-align: center; /* Center text */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Add shadow for depth */
-    background-color: rgb(36, 21, 1); /* Background color */
-    color: rgb(188, 184, 184); /* Text color */
+    width: 100%;
+    height: 130px;
+    padding: 20px;
+    border-radius: 20px;
+    text-align: center;
+    margin: 1rem auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: rgb(36, 21, 1);
+    color: rgb(188, 184, 184);
 }
 
+.pomodoro-wrapper {
+    border: 2px solid #d08746;
+    padding: 15px;
+    border-radius: 10px;
+    background-color: transparent;
+    color: #fff;
+    text-align: center;
+}
+
+.pomodoro-image {
+    width: 100px; /* Adjust the width as needed */
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.pomodoro-timer {
+    font-size: 3rem;
+    margin: 20px 0;
+}
+
+.timer-controls button {
+    margin: 5px;
+}
+
+.minimized-timer {
+    border: 1px solid #d08746;
+    padding: 10px;
+    background-color: transparent;
+    color: white;
+    text-align: center;
+}
+
+.countdown-display {
+    font-size: 2.5rem;
+    color: antiquewhite;
+}
+
+.pomodoro-message {
+    font-size: 2.5rem;
+    color: white;
+    font-weight: bold;
+}
+
+.transparent-btn {
+    background-color: transparent;
+    border: 1px solid currentColor; /* Keeps the border color consistent with text color */
+    color: currentColor; /* Text color */
+    box-shadow: none; /* Removes any box shadow */
+}
+
+.transparent-btn:hover {
+    background-color: rgb(170, 130, 82); /* Light background on hover for better visibility */
+}
+
+.transparent-btn:focus {
+    outline: none; /* Removes default focus outline */
+}
+
+/* Main title styling */
+.main-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 6rem;
+    font-weight: bold;
+    color: #ffffff;
+    background: linear-gradient(45deg, #ff6f61, #ffcc00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+    line-height: 0.8;
+    text-transform: uppercase;
+}
+
+/* Button styling */
+.learn-more-btn {
+    border-radius: 40px;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    color: #333;
+    background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent background */
+    border: 2px solid #333; /* Border to make it stand out */
+}
+
+/* Optional: Styling for the paragraph */
+.lead {
+    color: #ffffff; /* White color for better contrast */
+}

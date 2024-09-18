@@ -208,11 +208,22 @@ def submit_quiz(quiz_id):
         total_questions = Question.query.filter_by(quiz_id=quiz_id).count()
         correct_answers = 0
 
+        # Define the mapping of index to letter
+        index_to_letter = ['A', 'B', 'C', 'D']
+
+        # Loop through the quiz questions
         for question in Question.query.filter_by(quiz_id=quiz_id).all():
             user_answer = user_answers.get(f'question_{question.id}')
-            if user_answer == question.correct_answer:
-                correct_answers += 1
 
+            if user_answer is not None:
+                # Convert the user's answer (index) to the corresponding letter
+                user_answer_letter = index_to_letter[int(user_answer)]
+                
+                # Compare the user's answer to the correct answer
+                if user_answer_letter == question.correct_answer:
+                    correct_answers += 1
+
+        # Calculate the score as a percentage
         score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
         return render_template('nlp-quiz/submit_quiz.html', score=round(score, 2))
 

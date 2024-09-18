@@ -10,7 +10,7 @@
             <h2 class="h3 mt-5 mb-3">Summaries</h2>
             <div class="list-group">
                 {% for summary in summaries %}
-                <div class="list-group-item card-custom mb-3" style="text-align: center; border-radius: 20px;">
+                <div class="list-group-item card-custom mb-3 equal-height" style="text-align: center; border-radius: 20px; padding: 20px;">
                     <h5>{{ summary.filename }}</h5>
                     <pre>{{ summary.content }}</pre>
                     <a href="{{ url_for('views.view_summary', summary_id=summary.id) }}" class="btn btn-info">View</a>
@@ -28,8 +28,8 @@
             <h2 class="h3 mt-5 mb-3">Quizzes</h2>
             <div class="list-group">
                 {% for item in quizzes %}
-                <div class="list-group-item card-custom mb-3" style="text-align: center; border-radius: 20px;">
-                    <h5>{{ item.title }}</h5> <!-- The quiz title should be the summary filename -->
+                <div class="list-group-item card-custom mb-3 equal-height" style="text-align: center; border-radius: 20px; padding: 20px;">
+                    <h5>{{ item.title }}</h5>
                     <a href="{{ url_for('views.view_quiz', filename=item.title, summary_id=item.summary_id, quiz_id=item.id) }}" class="btn btn-primary">Take Quiz</a>
                     <form action="{{ url_for('views.delete_quiz', quiz_id=item.id) }}" method="POST" class="d-inline">
                         <button type="submit" class="btn btn-danger">Delete</button>
@@ -39,7 +39,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Import Material Button placed naturally within the content flow -->
     {% if current_user.is_authenticated %}
     <div class="mt-4 text-center">
