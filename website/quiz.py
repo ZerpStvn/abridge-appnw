@@ -10,7 +10,7 @@ import time
 import re
 
 # Set up OpenAI key
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='SECRET_KEY')
 
 def generate_questions_from_summary(summary, num_questions=10):
     response = client.chat.completions.create(
