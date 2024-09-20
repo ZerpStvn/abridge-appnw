@@ -75,36 +75,40 @@ def handle_upload(filename):
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], secure_filename(filename))
     file_ext = os.path.splitext(filename)[1].lower()
 
+    if not os.path.exists(file_path):
+        flash('File not found', 'error')
+        return redirect(url_for('views.import_materials'))
+
     existing_upload = Upload.query.filter_by(user_id=current_user.id, filename=filename).first()
 
     if not existing_upload:
         flash('No existing upload record found for this file', 'error')
         return redirect(url_for('views.import_materials'))
 
-    if file_ext in ['.pdf', '.docx', '.jpg', '.jpeg', '.png']:
-        try:
-            # Extract text based on file type
-            text = extract_text_from_pdf_nlp(file_path) if file_ext == '.pdf' else extract_text_from_docs_nlp(file_path)
-            
-            # Summarize using OpenAI
-            summary = summarize_text_with_openai(text)
-
-            # Update the existing upload record
-            existing_upload.text = text
-            existing_upload.summary = summary
-            db.session.commit()
-
-            return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename, summary_id=existing_upload.id)
-
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f'Failed to process uploaded file: {str(e)}')
-            flash(f'Failed to process uploaded file: {str(e)}', 'error')
+    try:
+        if file_ext == '.pdf':
+            text = extract_text_from_pdf_nlp(file_path)
+        elif file_ext in ['.docx']:
+            text = extract_text_from_docs_nlp(file_path)
+        elif file_ext in ['.jpg', '.jpeg', '.png']:
+            text = extract_text_from_image(file_path)
+        else:
+            flash('Unsupported file type for text extraction', 'error')
             return redirect(url_for('views.import_materials'))
-    else:
-        flash('Unsupported file type for text extraction', 'error')
-        return redirect(url_for('views.import_materials'))
+        
+        summary = summarize_text_with_openai(text)
 
+        existing_upload.text = text
+        existing_upload.summary = summary
+        db.session.commit()
+
+        return render_template('nlp-quiz/result.html', summary=summary, user=current_user, filename=filename, summary_id=existing_upload.id)
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Failed to process uploaded file: {str(e)}')
+        flash(f'Failed to process uploaded file: {str(e)}', 'error')
+        return redirect(url_for('views.import_materials'))
 
 @views.route('/view_summary/<int:summary_id>', methods=['GET'])
 @login_required
@@ -192,7 +196,6 @@ def view_quiz(quiz_id):
         return redirect(url_for('views.dashboard'))
     
     questions = Question.query.filter_by(quiz_id=quiz_id).all()
-    
     # Split the choices back into a list
     for question in questions:
         question.choices = question.choices.split(",")  # Split choices into a list
@@ -206,29 +209,26 @@ def submit_quiz(quiz_id):
         quiz = Quiz.query.filter_by(id=quiz_id, user_id=current_user.id).first_or_404()
         user_answers = request.form.to_dict()
         total_questions = Question.query.filter_by(quiz_id=quiz_id).count()
-        correct_answers = 0
 
-        # Define the mapping of index to letter
+        correct_answers = 0
         index_to_letter = ['A', 'B', 'C', 'D']
 
-        # Loop through the quiz questions
         for question in Question.query.filter_by(quiz_id=quiz_id).all():
             user_answer = user_answers.get(f'question_{question.id}')
-
+            
             if user_answer is not None:
-                # Convert the user's answer (index) to the corresponding letter
                 user_answer_letter = index_to_letter[int(user_answer)]
-                
-                # Compare the user's answer to the correct answer
                 if user_answer_letter == question.correct_answer:
                     correct_answers += 1
 
-        # Calculate the score as a percentage
         score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
-        return render_template('nlp-quiz/submit_quiz.html', score=round(score, 2))
+
+        # Flash the score and redirect
+        flash(f'Your score: {round(score, 2)}%', 'success')
+        return redirect(url_for('views.dashboard'))
 
     except Exception as e:
-        current_app.logger.error(f'Failed to submit quiz: {str(e)}', exc_info=True)
+        current_app.logger.error(f'Error submitting quiz: {str(e)}', exc_info=True)
         flash('An error occurred while submitting the quiz.', 'error')
         return redirect(url_for('views.dashboard'))
 

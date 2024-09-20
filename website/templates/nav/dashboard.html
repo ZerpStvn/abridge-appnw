@@ -30,9 +30,9 @@
                 {% for item in quizzes %}
                 <div class="list-group-item card-custom mb-3 equal-height" style="text-align: center; border-radius: 20px; padding: 20px;">
                     <h5>{{ item.title }}</h5>
-                    <a href="{{ url_for('views.view_quiz', filename=item.title, summary_id=item.summary_id, quiz_id=item.id) }}" class="btn btn-primary">Take Quiz</a>
+                    <a href="{{ url_for('views.view_quiz', filename=item.title, summary_id=item.summary_id, quiz_id=item.id) }}" class="btn btn-primary" style="margin-top: 15px;">Take Quiz</a>
                     <form action="{{ url_for('views.delete_quiz', quiz_id=item.id) }}" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <button type="submit" class="btn btn-danger" style="margin-top: 15px;">Delete</button>
                     </form>
                 </div>
                 {% endfor %}

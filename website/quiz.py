@@ -62,20 +62,15 @@ def create_quiz(summary, summary_id, num_questions=10):
 
     # Loop through the generated questions and save each to the database
     for question_text, choices, correct_answer in questions_data:
-        # Limit choices to the first four
-        choices = choices[:4]  # Limit to 4 choices only
-
-        # Convert list of choices to a single string (comma-separated values)
+    # Convert list of choices to a single string (comma-separated values)
         choices_str = ",".join(choices)
 
         new_question = Question(
             question_text=question_text,
             quiz_id=new_quiz.id,
-            correct_answer=correct_answer,
+            correct_answer=correct_answer,  # Store the correct answer as "A", "B", "C", or "D"
             choices=choices_str
         )
         db.session.add(new_question)
-
-    db.session.commit()
 
     return new_quiz

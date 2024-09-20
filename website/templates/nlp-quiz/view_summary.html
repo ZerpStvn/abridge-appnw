@@ -89,7 +89,6 @@
 
 </main>
 
-<!-- JavaScript for Pomodoro Timer -->
 <script>
     let pomodoroInterval;
     let remainingTime = 25 * 60; // Default time: 25 minutes
@@ -126,11 +125,12 @@
                 if (isBreakTime) {
                     alert("Break time over! Back to work!");
                     isBreakTime = false;
-                    startPomodoro();
+                    startPomodoro(); // Restart work session
                 } else {
                     alert("Time's up! Take a 5-minute break.");
                     isBreakTime = true;
-                    startPomodoro(); // Automatically start break time
+                    remainingTime = 5 * 60; // Set break time to 5 minutes (300 seconds)
+                    startCountdown(); // Automatically start break countdown
                 }
             }
         }, 1000);
@@ -143,7 +143,7 @@
 
     function stopPomodoro() {
         clearInterval(pomodoroInterval);
-        remainingTime = 25 * 60; // Reset to 25 minutes
+        remainingTime = 25 * 60; // Reset to 25 minutes for work session
         document.getElementById('countdown-timer').textContent = "25:00";
         document.getElementById('minimized-timer-display').textContent = "25:00";
         isPaused = false;
