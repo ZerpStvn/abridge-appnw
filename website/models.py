@@ -22,8 +22,8 @@ class Upload(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     filename = db.Column(db.String(150))
-    text = db.Column(db.Text)
-    summary = db.Column(db.Text)
+    text = db.Column(db.Text, nullable=True)
+    summary = db.Column(db.Text, nullable=True)
     date_created = db.Column(db.DateTime(timezone=True), default=func.now())
 
 class Quiz(db.Model):

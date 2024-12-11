@@ -5,7 +5,7 @@ from openai import OpenAI
 import os
 
 # Initialize OpenAI client
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='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')
 
 def extract_text(filename):
     """
@@ -86,10 +86,10 @@ def summarize_text_with_openai(text):
         response = client.chat.completions.create(model="gpt-4",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": f"Summarize the following text with high accuracy and format it as study notes:\n\n{text}"}
+            {"role": "user", "content": f"Summarize the following text and format it as study notes:\n\n{text}"}
         ],
         max_tokens=900,
-        temperature=0.3)
+        temperature=0.5)
 
         # Extract summary from response
         summary = response.choices[0].message.content.strip()

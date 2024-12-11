@@ -395,6 +395,163 @@ a.navbar{
     color: #ffffff; /* White color for better contrast */
 }
 
-.small-input {
-    width: 60px;
+.contact-heading {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 30px;
+}
+
+/* Contact Sections */
+.contact-section {
+    position: relative;
+    background-color: rgb(36, 21, 1); /* Soft grey background */
+    padding: 20px;
+    border-radius: 40px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.contact-section:hover {
+    transform: translateY(-10px); /* Hover effect - Elevates the card */
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+
+.contact-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, black, #d08746); /* Gradient background */
+    filter: blur(30px);
+    border-radius: 40px;
+    z-index: -1; /* Ensures the gradient is behind the content */
+}
+
+/* Section Title */
+.section-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #d8b368; /* Primary color */
+    margin-bottom: 10px;
+}
+
+/* Section Text */
+.section-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: whitesmoke;
+}
+
+/* Links */
+.contact-link {
+    color: #8fbfee;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.contact-link:hover {
+    text-decoration: underline;
+    color: #004080;
+}
+
+/* Phone Number */
+.phone-number {
+    font-weight: bold;
+    color: whitesmoke;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .contact-section {
+        padding: 15px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .section-text {
+        font-size: 1rem;
+    }
+}
+
+/* About Section Heading */
+.about-heading {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 30px;
+}
+
+/* About Sections */
+.about-section {
+    position: relative;
+    background-color: rgb(36, 21, 1); /* Soft grey background */
+    padding: 20px;
+    border-radius: 40px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.about-section:hover {
+    transform: translateY(-10px); /* Hover effect - Elevates the card */
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+
+.about-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, black, #d08746); /* Gradient background */
+    filter: blur(30px);
+    border-radius: 40px;
+    z-index: -1; /* Ensures the gradient is behind the content */
+}
+
+/* Section Title */
+.section-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #d8b368; /* Primary color */
+    margin-bottom: 10px;
+}
+
+/* Section Text */
+.section-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: whitesmoke;
+}
+
+/* Links */
+.about-link {
+    color: #8fbfee;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.about-link:hover {
+    text-decoration: underline;
+    color: #004080;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .about-section {
+        padding: 15px;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .section-text {
+        font-size: 1rem;
+    }
 }

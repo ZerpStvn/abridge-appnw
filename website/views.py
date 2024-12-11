@@ -111,47 +111,37 @@ def handle_upload(filename):
         flash(f'Failed to process uploaded file: {str(e)}', 'error')
         return redirect(url_for('views.import_materials'))
 
-from bert_score import score
-
 @views.route('/view_summary/<int:summary_id>', methods=['GET'])
 @login_required
 def view_summary(summary_id):
     form = UploadForm()
     summary = Upload.query.get_or_404(summary_id)
     
-    # Check for None values and handle them
-    if not summary.text:
-        summary.text = "Original text not available."
-    if not summary.summary:
-        summary.summary = "Summary not available."
-    
-    try:
-        # Compute BERTScore for accuracy if both fields are valid
-        if summary.text != "Original text not available." and summary.summary != "Summary not available.":
-            P, R, F1 = score([summary.summary], [summary.text], lang="en")
-            bert_score_f1 = round(F1.item(), 1)
-        else:
-            bert_score_f1 = None
-    except Exception as e:
-        bert_score_f1 = None
-        error_message = f"An error occurred while calculating BERTScore: {str(e)}"
-        return render_template(
-            'nlp-quiz/view_summary.html',
-            summary=summary,
-            user=current_user,
-            form=form,
-            bert_score_f1=bert_score_f1,
-            error_message=error_message
-        )
+    # Prepare context for rendering the template
+    context = {
+        'summary': summary,
+        'user': current_user,
+        'form': form,
+        'bert_score_f1': None,
+        'error_message': None,
+        'original_text': summary.text,
+        'generated_summary': summary.summary,
+    }
 
-    return render_template(
-        'nlp-quiz/view_summary.html',
-        summary=summary,
-        user=current_user,
-        form=form,
-        bert_score_f1=bert_score_f1,
-        error_message=None
-    )
+    # Check for missing or empty original text or summary
+    if not summary.text or not summary.summary or summary.text.strip() == "" or summary.summary.strip() == "":
+        context['error_message'] = "Original text or summary is missing. Unable to calculate accuracy."
+        return render_template('nlp-quiz/view_summary.html', **context)
+
+    try:
+        # Compute BERTScore for accuracy
+        P, R, F1 = score([summary.summary], [summary.text], lang="en")
+        context['bert_score_f1'] = round(F1[0].item(), 1)
+    except Exception as e:
+        logging.error(f"Error calculating BERTScore: {e}")
+        context['error_message'] = "An error occurred while calculating BERTScore."
+
+    return render_template('nlp-quiz/view_summary.html', **context)
 
 @views.route('/edit_summary/<int:summary_id>', methods=['GET', 'POST'])
 @login_required

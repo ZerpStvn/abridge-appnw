@@ -10,14 +10,14 @@ import time
 import re
 
 # Set up OpenAI key
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='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')
 
 def generate_questions_from_summary(summary, num_questions=10):
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": f"Generate a {num_questions}-question multiple-choice quiz from the following summary. Format the response as follows: \n1. Question: [Question Text]\n2. Choices:\n   A) [Choice 1]\n   B) [Choice 2]\n   C) [Choice 3]\n   D) [Choice 4]\n3. Answer: [Correct Answer]\n\nSummary: {summary}"}
+            {"role": "user", "content": f"Generate 10 question multiple-choice quiz from the following summary. Format the response as follows: \n1. Question: [Question Text]\n2. Choices:\n   A) [Choice 1]\n   B) [Choice 2]\n   C) [Choice 3]\n   D) [Choice 4]\n3. Answer: [Correct Answer]\n\nSummary: {summary}"}
         ]
     )
 

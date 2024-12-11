@@ -9,9 +9,7 @@ import os
 import textwrap
 from docx import Document
 
-# Load SpaCy model
 nlp = spacy.load("en_core_web_sm", disable=["parser", "ner", "entity_linker", "attribute_ruler", "entity_ruler"])
-
 def preprocess_text(text):
     """Tokenize text into sentences using SpaCy"""
     doc = nlp(text)

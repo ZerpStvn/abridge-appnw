@@ -9,7 +9,7 @@
     <!-- BERTScore Section -->
     <div class="mb-4">
         <h4 class="text-white">Summary Accuracy</h4>
-        {% if bert_score_f1 is not none %}
+        {% if bert_score_f1 %}
             <p class="text-success">BERTScore (F1): <strong>{{ bert_score_f1 }}</strong></p>
         {% elif error_message %}
             <p class="text-danger">{{ error_message }}</p>
@@ -24,14 +24,14 @@
             <div class="form-group">
                 <label for="text" class="text-white">Original Text</label>
                 <textarea id="text" class="form-control text-white" rows="20" readonly style="background-color: transparent; border: 1px solid white;">
-                {{ summary.text or "Original text not available." }}</textarea>
+                {{ summary.text }}</textarea>
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 <label for="summary" class="text-white">Summary</label>
                 <textarea id="summary" class="form-control text-white" rows="20" readonly style="background-color: transparent; border: 1px solid white;">
-                {{ summary.summary or "Summary not available." }}</textarea>
+                {{ summary.summary }}</textarea>
             </div>
         </div>
     </div>
@@ -77,9 +77,9 @@
 
             <div id="timer-settings" class="mt-2">
                 <label for="timer-minutes">Minutes:</label>
-                <input type="number" id="timer-minutes" value="25" min="1" max="60" class="form-control d-inline" style="width: 50px;">
+                <input type="number" id="timer-minutes" value="25" min="1" max="60" class="form-control d-inline" style="width: 60px;">
                 <label for="timer-seconds">Seconds:</label>
-                <input type="number" id="timer-seconds" value="0" min="0" max="59" class="form-control d-inline" style="width: 50px;">
+                <input type="number" id="timer-seconds" value="0" min="0" max="59" class="form-control d-inline" style="width: 60px;">
             </div>
 
             <div id="timer" class="pomodoro-timer mt-3">
@@ -106,7 +106,7 @@
         let timerInterval;
         let isPaused = false;
         let remainingTime = 0;
-
+    
         function startPomodoro() {
             const minutes = parseInt(document.getElementById("timer-minutes").value) || 0;
             const seconds = parseInt(document.getElementById("timer-seconds").value) || 0;
