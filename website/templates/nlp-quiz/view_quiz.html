@@ -6,14 +6,13 @@
 <main class="container mt-5">
     <h2 class="h3 mb-4">{{ quiz.title }}</h2>
     <form method="POST" action="{{ url_for('views.submit_quiz', quiz_id=quiz.id) }}">
-        {% set letters = ['A', 'B', 'C', 'D'] %}
         {% for question in questions %}
         <div class="mb-4">
             <p><strong>Question {{ loop.index }}:</strong> {{ question.question_text }}</p>
-            {% for choice in question.choices[:4] %}
+            {% for choice in question.choices[:4] %} <!-- Display only the first 4 choices -->
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ loop.index0 }}" required>
-                <label class="form-check-label">{{ letters[loop.index0] }}. {{ choice }}</label>
+                <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ 'ABCD'[loop.index0] }}" required>
+                <label class="form-check-label">{{ 'ABCD'[loop.index0] }}. {{ choice }}</label>
             </div>
             {% endfor %}
         </div>

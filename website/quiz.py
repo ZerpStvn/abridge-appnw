@@ -10,7 +10,7 @@ import time
 import re
 
 # Set up OpenAI key
-client = OpenAI(api_key='SECRET_KEY')
+client = OpenAI(api_key='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')
 
 def generate_questions_from_summary(summary, num_questions=10):
     response = client.chat.completions.create(
@@ -62,15 +62,20 @@ def create_quiz(summary, summary_id, num_questions=10):
 
     # Loop through the generated questions and save each to the database
     for question_text, choices, correct_answer in questions_data:
-    # Convert list of choices to a single string (comma-separated values)
+        # Limit choices to the first four
+        choices = choices[:4]  # Limit to 4 choices only
+
+        # Convert list of choices to a single string (comma-separated values)
         choices_str = ",".join(choices)
 
         new_question = Question(
             question_text=question_text,
             quiz_id=new_quiz.id,
-            correct_answer=correct_answer,  # Store the correct answer as "A", "B", "C", or "D"
+            correct_answer=correct_answer,
             choices=choices_str
         )
         db.session.add(new_question)
+
+    db.session.commit()
 
     return new_quiz

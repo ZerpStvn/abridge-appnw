@@ -14,6 +14,7 @@ from .quiz import generate_questions_from_summary, create_quiz
 from .models import User, Quiz, Question, Upload
 import logging
 from .summarization import extract_text, clean_text, extract_definitions, format_output, summarize_text_with_openai
+from bert_score import score
 
 views = Blueprint('views', __name__)
 
@@ -110,12 +111,47 @@ def handle_upload(filename):
         flash(f'Failed to process uploaded file: {str(e)}', 'error')
         return redirect(url_for('views.import_materials'))
 
+from bert_score import score
+
 @views.route('/view_summary/<int:summary_id>', methods=['GET'])
 @login_required
 def view_summary(summary_id):
     form = UploadForm()
     summary = Upload.query.get_or_404(summary_id)
-    return render_template('nlp-quiz/view_summary.html', summary=summary, user=current_user, form=form)
+    
+    # Check for None values and handle them
+    if not summary.text:
+        summary.text = "Original text not available."
+    if not summary.summary:
+        summary.summary = "Summary not available."
+    
+    try:
+        # Compute BERTScore for accuracy if both fields are valid
+        if summary.text != "Original text not available." and summary.summary != "Summary not available.":
+            P, R, F1 = score([summary.summary], [summary.text], lang="en")
+            bert_score_f1 = round(F1.item(), 1)
+        else:
+            bert_score_f1 = None
+    except Exception as e:
+        bert_score_f1 = None
+        error_message = f"An error occurred while calculating BERTScore: {str(e)}"
+        return render_template(
+            'nlp-quiz/view_summary.html',
+            summary=summary,
+            user=current_user,
+            form=form,
+            bert_score_f1=bert_score_f1,
+            error_message=error_message
+        )
+
+    return render_template(
+        'nlp-quiz/view_summary.html',
+        summary=summary,
+        user=current_user,
+        form=form,
+        bert_score_f1=bert_score_f1,
+        error_message=None
+    )
 
 @views.route('/edit_summary/<int:summary_id>', methods=['GET', 'POST'])
 @login_required
@@ -196,7 +232,7 @@ def view_quiz(quiz_id):
         return redirect(url_for('views.dashboard'))
     
     questions = Question.query.filter_by(quiz_id=quiz_id).all()
-    # Split the choices back into a list
+    # Split the choices back into a list if it's stored as a comma-separated string
     for question in questions:
         question.choices = question.choices.split(",")  # Split choices into a list
     
@@ -206,28 +242,32 @@ def view_quiz(quiz_id):
 @login_required
 def submit_quiz(quiz_id):
     try:
+        # Fetch the quiz for the current user
         quiz = Quiz.query.filter_by(id=quiz_id, user_id=current_user.id).first_or_404()
+
+        # Get user answers from the submitted form
         user_answers = request.form.to_dict()
         total_questions = Question.query.filter_by(quiz_id=quiz_id).count()
 
         correct_answers = 0
-        index_to_letter = ['A', 'B', 'C', 'D']
 
+        # Process each question
         for question in Question.query.filter_by(quiz_id=quiz_id).all():
-            user_answer = user_answers.get(f'question_{question.id}')
-            
-            if user_answer is not None:
-                user_answer_letter = index_to_letter[int(user_answer)]
-                if user_answer_letter == question.correct_answer:
-                    correct_answers += 1
+            user_answer = user_answers.get(f'question_{question.id}')  # 'A', 'B', 'C', or 'D'
 
+            # Compare user's answer with the correct answer
+            if user_answer is not None and user_answer == question.correct_answer:
+                correct_answers += 1
+
+        # Calculate the score
         score = (correct_answers / total_questions) * 100 if total_questions > 0 else 0
 
-        # Flash the score and redirect
+        # Flash the score and redirect to the dashboard
         flash(f'Your score: {round(score, 2)}%', 'success')
         return redirect(url_for('views.dashboard'))
 
     except Exception as e:
+        # Log the error for debugging
         current_app.logger.error(f'Error submitting quiz: {str(e)}', exc_info=True)
         flash('An error occurred while submitting the quiz.', 'error')
         return redirect(url_for('views.dashboard'))
