@@ -28,12 +28,3 @@ numpy
 networkx
 spacy
 sklearn
-TfidfVectorizer
-fitz
-docx
-cosine_similarity
-PIL
-pytesseract
-openai
-spacy
-bert_score
