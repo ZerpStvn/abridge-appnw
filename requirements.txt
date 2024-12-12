@@ -9,3 +9,4 @@ numpy==1.26.4
 scikit-learn==1.5.1
 transformers==4.42.3
 pdf2image==1.17.0
+flask_login
